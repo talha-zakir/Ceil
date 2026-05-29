@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Shield, Bell, Palette } from "lucide-react";
+import { ArrowLeft, Shield, Bell, Palette, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { ApiKeyForm } from "@/components/settings/api-key-form";
 import { AlertConfig } from "@/components/settings/alert-config";
 import { ProviderToggle } from "@/components/settings/provider-toggle";
+import { BillingPanel } from "@/components/settings/billing-panel";
 
 const tabs = [
   { id: "keys", label: "API Keys", icon: Shield },
   { id: "alerts", label: "Alerts", icon: Bell },
   { id: "providers", label: "Providers", icon: Palette },
+  { id: "billing", label: "Billing", icon: CreditCard },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -102,6 +104,7 @@ export default function SettingsPage() {
           {activeTab === "keys" && <ApiKeyForm />}
           {activeTab === "alerts" && <AlertConfig />}
           {activeTab === "providers" && <ProviderToggle />}
+          {activeTab === "billing" && <BillingPanel />}
         </motion.div>
       </div>
     </div>

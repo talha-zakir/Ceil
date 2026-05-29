@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Zap, Settings, Wifi, WifiOff } from "lucide-react";
 import Link from "next/link";
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/clerk-react";
 
 interface HeaderProps {
   status: "healthy" | "warning" | "critical";
@@ -131,6 +132,44 @@ export function Header({ status }: HeaderProps) {
         >
           <Settings size={14} />
         </Link>
+
+        <div className="w-[1px] h-4" style={{ background: "hsl(var(--border-subtle))" }} />
+
+        {/* Clerk Auth Controls */}
+        <SignedOut>
+          <div className="flex items-center gap-2">
+            <SignInButton mode="modal">
+              <button
+                className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                style={{ color: "hsl(var(--text-secondary))" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "hsl(var(--text-primary))")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "hsl(var(--text-secondary))")}
+              >
+                Sign In
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button
+                className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors shadow-sm"
+                style={{
+                  background: "hsl(var(--text-primary))",
+                  color: "hsl(var(--bg-root))",
+                }}
+              >
+                Sign Up
+              </button>
+            </SignUpButton>
+          </div>
+        </SignedOut>
+        <SignedIn>
+          <UserButton 
+            appearance={{
+              elements: {
+                userButtonAvatarBox: "w-7 h-7",
+              }
+            }}
+          />
+        </SignedIn>
       </div>
     </header>
   );

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { ClerkProviderWrapper } from "@/components/providers/clerk-provider-wrapper";
 import { AuthListener } from "@/components/layout/auth-listener";
 import "./globals.css";
 
@@ -46,22 +47,24 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased noise`}
         suppressHydrationWarning
       >
-        <AuthListener />
-        {children}
-        <Toaster
-          theme="dark"
-          position="top-right"
-          toastOptions={{
-            style: {
-              background: "hsl(224 15% 12%)",
-              border: "1px solid hsl(224 12% 20%)",
-              color: "hsl(0 0% 95%)",
-              fontSize: "13px",
-            },
-          }}
-          richColors
-          closeButton
-        />
+        <ClerkProviderWrapper>
+          <AuthListener />
+          {children}
+          <Toaster
+            theme="dark"
+            position="top-right"
+            toastOptions={{
+              style: {
+                background: "hsl(224 15% 12%)",
+                border: "1px solid hsl(224 12% 20%)",
+                color: "hsl(0 0% 95%)",
+                fontSize: "13px",
+              },
+            }}
+            richColors
+            closeButton
+          />
+        </ClerkProviderWrapper>
       </body>
     </html>
   );
