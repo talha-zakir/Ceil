@@ -5,10 +5,20 @@ mod deeplink;
 use tauri::Listener;
 use tauri::tray::TrayIconBuilder;
 use tauri::menu::{Menu, MenuItem};
+use std::sync::Mutex;
+use std::collections::HashMap;
+
+pub use proxy::{AppState, ProxyConfig, update_proxy_config};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(AppState {
+            config: Mutex::new(ProxyConfig {
+                failover_enabled: false,
+                fallback_rules: HashMap::new(),
+            }),
+        })
         .plugin(tauri_plugin_log::Builder::default().build())
         .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
@@ -56,7 +66,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             keychain::save_api_key,
             keychain::get_api_key,
-            keychain::delete_api_key
+            keychain::delete_api_key,
+            update_proxy_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

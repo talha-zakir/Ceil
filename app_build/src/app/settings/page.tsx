@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Shield, Bell, Palette, CreditCard } from "lucide-react";
+import { ArrowLeft, Shield, Bell, Palette, CreditCard, Sliders } from "lucide-react";
 import Link from "next/link";
 import { ApiKeyForm } from "@/components/settings/api-key-form";
 import { AlertConfig } from "@/components/settings/alert-config";
 import { ProviderToggle } from "@/components/settings/provider-toggle";
 import { BillingPanel } from "@/components/settings/billing-panel";
+import { RoutingConfig } from "@/components/settings/routing-config";
 
 const tabs = [
   { id: "keys", label: "API Keys", icon: Shield },
   { id: "alerts", label: "Alerts", icon: Bell },
   { id: "providers", label: "Providers", icon: Palette },
+  { id: "routing", label: "Routing & Cost", icon: Sliders },
   { id: "billing", label: "Billing", icon: CreditCard },
 ] as const;
 
@@ -104,6 +106,7 @@ export default function SettingsPage() {
           {activeTab === "keys" && <ApiKeyForm />}
           {activeTab === "alerts" && <AlertConfig />}
           {activeTab === "providers" && <ProviderToggle />}
+          {activeTab === "routing" && <RoutingConfig />}
           {activeTab === "billing" && <BillingPanel />}
         </motion.div>
       </div>
