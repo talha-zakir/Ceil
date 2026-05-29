@@ -27,9 +27,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 ---
 
 ## 🔄 Current Pipeline State
-- **Active Step**: `@engineer` (UI and Adapter Integration Complete)
-- **Last Updated**: 2026-05-29T09:45:00+09:00
-- **Current Objective**: Move to Phase 5 (Tauri shell + Proxy) or have user verify the dashboard locally.
+- **Active Step**: `@engineer` (Tauri Backend Complete, Frontend Integration Pending)
+- **Last Updated**: 2026-05-29T10:45:00+09:00
+- **Current Objective**: Move to Phase 7 & 8 (Frontend Integration with Tauri Events).
 
 ---
 
@@ -41,10 +41,10 @@ This file serves as the persistent memory for the Antigravity development team. 
   - [x] Phase 2: Core UI components (token bars, budget trackers, cost charts)
   - [x] Phase 3: Provider adapter layer (`lib/providers/`) + `NormalizedQuota` interface
   - [x] Phase 4: Mock Data Generation and API Key hooks
-  - [ ] Phase 5: Tauri shell + system tray + OS keychain integration
-  - [ ] Phase 6: Local micro-proxy server (Rust, `localhost:9999`)
-  - [ ] Phase 7: Real-time rate-limit countdown UI (Backend Integration)
-  - [ ] Phase 8: Velocity alerts & notification system (Backend Integration)
+  - [x] Phase 5: Tauri shell + system tray + OS keychain integration
+  - [x] Phase 6: Local micro-proxy server (Rust, `localhost:9999`)
+  - [ ] Phase 7: Real-time rate-limit countdown UI (Frontend Integration)
+  - [ ] Phase 8: Velocity alerts & notification system (Frontend Integration)
   - [ ] Phase 9: Clerk deep-link auth + Stripe subscription
   - [ ] Phase 10: Dynamic pricing config polling
   - [ ] Phase 11: "What-If" cost optimization insights
