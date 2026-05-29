@@ -58,6 +58,7 @@ export const groqAdapter: ProviderAdapter = {
   displayName: "Groq",
 
   supportedModels: [
+    "llama-4-scout",
     "llama-3.3-70b-versatile",
     "llama-3.1-8b-instant",
     "llama-3.2-1b-preview",

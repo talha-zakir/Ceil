@@ -29,15 +29,15 @@ export function CostOptimizer({ quotas }: CostOptimizerProps) {
   const totalOutputTokens = premiumQuotas.reduce((sum, q) => sum + (q.outputTokens?.used ?? 0), 0) || 120000; // fallback default
 
   // Pricing constants (per 1M tokens)
-  // Claude 3.5 Sonnet / o1 average
+  // Claude 4.8 Opus / GPT-5.5 average
   const premiumInputRate = 3.00 / 1_000_000;
   const premiumOutputRate = 15.00 / 1_000_000;
 
-  // GPT-4o / Gemini Pro average (Tier 2)
+  // GPT-5.5-instant / Gemini 3.1 Pro average (Tier 2)
   const gpInputRate = 2.50 / 1_000_000;
   const gpOutputRate = 10.00 / 1_000_000;
 
-  // Gemini 1.5 Flash (Tier 3)
+  // Gemini 3.5 Flash (Tier 3)
   const flashInputRate = 0.075 / 1_000_000;
   const flashOutputRate = 0.30 / 1_000_000;
 
@@ -50,8 +50,8 @@ export function CostOptimizer({ quotas }: CostOptimizerProps) {
   const savings = Math.max(0, currentCost - targetCost);
   const savingsPercent = currentCost > 0 ? (savings / currentCost) * 100 : 0;
 
-  const targetAccuracy = selectedScenario === "flash" ? 72 : 82;
-  const currentAccuracy = 90; // Claude 3.5 Sonnet base
+  const targetAccuracy = selectedScenario === "flash" ? 78 : 86;
+  const currentAccuracy = 94; // Claude 4.8 Opus base
   const accuracyLoss = currentAccuracy - targetAccuracy;
 
   const recommendableTasks = selectedScenario === "flash" 
@@ -108,7 +108,7 @@ export function CostOptimizer({ quotas }: CostOptimizerProps) {
                 : "text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-secondary))]"
             }`}
           >
-            Swap to GPT-4o (Tier 2)
+            Swap to GPT-5.5-instant (Tier 2)
           </button>
         </div>
       </div>
@@ -153,11 +153,11 @@ export function CostOptimizer({ quotas }: CostOptimizerProps) {
           </div>
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-[hsl(var(--text-secondary))]">
-              <span>Claude 3.5 Sonnet:</span>
+              <span>Claude 4.8 Opus:</span>
               <span className="font-semibold text-emerald-400">{currentAccuracy}%</span>
             </div>
             <div className="flex justify-between text-xs text-[hsl(var(--text-secondary))]">
-              <span>{selectedScenario === "flash" ? "Gemini 1.5 Flash" : "GPT-4o"}:</span>
+              <span>{selectedScenario === "flash" ? "Gemini 3.5 Flash" : "GPT-5.5-instant"}:</span>
               <span className="font-semibold text-amber-400">{targetAccuracy}%</span>
             </div>
           </div>
@@ -184,7 +184,7 @@ export function CostOptimizer({ quotas }: CostOptimizerProps) {
             </div>
             <p className="text-[11px] text-[hsl(var(--text-tertiary))] leading-relaxed">
               {selectedScenario === "flash" 
-                ? "Perfect for high-volume formatting, syntax checks, or unit testing. Swap to save up to 98% on token costs, but retain Claude 3.5 Sonnet for architectural edits." 
+                ? "Perfect for high-volume formatting, syntax checks, or unit testing. Swap to save up to 98% on token costs, but retain Claude 4.8 Opus for architectural edits." 
                 : "Suitable for search, code comprehension, and general coding updates. Swap to save 18-20% with minimal loss in accuracy."}
             </p>
           </div>

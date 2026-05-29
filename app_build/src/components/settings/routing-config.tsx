@@ -24,24 +24,24 @@ const PROVIDERS = [
 const BENCHMARKS = [
   { 
     tier: "Tier 1: Deep Reasoning", 
-    models: "Claude 3.5 Sonnet / o1", 
-    accuracy: 90, 
+    models: "Claude 4.8 Opus / GPT-5.5", 
+    accuracy: 94, 
     cost: "$$$", 
     accuracyColor: "hsl(var(--color-healthy))",
     icon: Bot
   },
   { 
     tier: "Tier 2: General Purpose", 
-    models: "Gemini 1.5 Pro / GPT-4o", 
-    accuracy: 82, 
+    models: "Gemini 3.1 Pro / GPT-5.5-instant", 
+    accuracy: 86, 
     cost: "$$", 
     accuracyColor: "hsl(var(--color-warning))",
     icon: Cpu
   },
   { 
     tier: "Tier 3: Fast & Formatting", 
-    models: "Gemini 1.5 Flash / GPT-4o Mini", 
-    accuracy: 72, 
+    models: "Gemini 3.5 Flash / GPT-4o Mini", 
+    accuracy: 78, 
     cost: "$", 
     accuracyColor: "hsl(var(--color-critical))",
     icon: Zap

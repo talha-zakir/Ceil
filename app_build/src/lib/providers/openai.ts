@@ -70,6 +70,8 @@ export const openaiAdapter: ProviderAdapter = {
   displayName: "OpenAI",
 
   supportedModels: [
+    "gpt-5.5",
+    "gpt-5.5-instant",
     "gpt-4o",
     "gpt-4o-mini",
     "gpt-4.1",
@@ -169,7 +171,7 @@ export const openaiAdapter: ProviderAdapter = {
 
     return {
       provider: "openai",
-      model: "gpt-4o",
+      model: "gpt-5.5-instant",
       tier: "paid",
       inputTokens: partial.inputTokens ?? emptyBucket(),
       outputTokens: partial.outputTokens ?? emptyBucket(),

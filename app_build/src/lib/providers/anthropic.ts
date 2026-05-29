@@ -57,6 +57,7 @@ export const anthropicAdapter: ProviderAdapter = {
   displayName: "Anthropic",
 
   supportedModels: [
+    "claude-opus-4.8",
     "claude-sonnet-4-20250514",
     "claude-opus-4-20250514",
     "claude-3.5-sonnet-20241022",

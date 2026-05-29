@@ -56,6 +56,8 @@ export const mistralAdapter: ProviderAdapter = {
   displayName: "Mistral AI",
 
   supportedModels: [
+    "mistral-medium-3.5",
+    "mistral-small-4",
     "mistral-large-latest",
     "mistral-medium-latest",
     "mistral-small-latest",
@@ -124,7 +126,7 @@ export const mistralAdapter: ProviderAdapter = {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "mistral-small-latest",
+          model: "mistral-small-4",
           max_tokens: 1,
           messages: [{ role: "user", content: "hi" }],
         }),
@@ -146,7 +148,7 @@ export const mistralAdapter: ProviderAdapter = {
 
     return {
       provider: "mistral",
-      model: "mistral-small-latest",
+      model: "mistral-small-4",
       tier: "paid",
       inputTokens: partial.inputTokens ?? emptyBucket(),
       outputTokens: partial.outputTokens ?? emptyBucket(),

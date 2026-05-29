@@ -18,7 +18,7 @@ interface UseQuotaReturn {
 const BASELINE_QUOTAS: NormalizedQuota[] = [
   {
     provider: "openai",
-    model: "gpt-4o",
+    model: "gpt-5.5",
     tier: "paid",
     inputTokens: { used: 0, limit: 2_000_000, remaining: 2_000_000, resetAt: new Date().toISOString() },
     outputTokens: { used: 0, limit: 800_000, remaining: 800_000, resetAt: new Date().toISOString() },
@@ -29,7 +29,7 @@ const BASELINE_QUOTAS: NormalizedQuota[] = [
   },
   {
     provider: "anthropic",
-    model: "claude-3-5-sonnet",
+    model: "claude-sonnet-4-20250514",
     tier: "paid",
     inputTokens: { used: 0, limit: 1_000_000, remaining: 1_000_000, resetAt: new Date().toISOString() },
     outputTokens: { used: 0, limit: 400_000, remaining: 400_000, resetAt: new Date().toISOString() },
@@ -40,7 +40,7 @@ const BASELINE_QUOTAS: NormalizedQuota[] = [
   },
   {
     provider: "gemini",
-    model: "gemini-1.5-flash",
+    model: "gemini-3.5-flash",
     tier: "free",
     inputTokens: { used: 0, limit: 15_000_000, remaining: 15_000_000, resetAt: new Date().toISOString() },
     outputTokens: { used: 0, limit: 4_000_000, remaining: 4_000_000, resetAt: new Date().toISOString() },
@@ -51,7 +51,7 @@ const BASELINE_QUOTAS: NormalizedQuota[] = [
   },
   {
     provider: "groq",
-    model: "llama-3-groq",
+    model: "llama-3.3-70b-versatile",
     tier: "free",
     inputTokens: { used: 0, limit: 5_000_000, remaining: 5_000_000, resetAt: new Date().toISOString() },
     outputTokens: { used: 0, limit: 2_000_000, remaining: 2_000_000, resetAt: new Date().toISOString() },
@@ -62,7 +62,7 @@ const BASELINE_QUOTAS: NormalizedQuota[] = [
   },
   {
     provider: "mistral",
-    model: "mistral-large",
+    model: "mistral-medium-3.5",
     tier: "paid",
     inputTokens: { used: 0, limit: 2_000_000, remaining: 2_000_000, resetAt: new Date().toISOString() },
     outputTokens: { used: 0, limit: 1_000_000, remaining: 1_000_000, resetAt: new Date().toISOString() },

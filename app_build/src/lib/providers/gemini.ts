@@ -52,6 +52,9 @@ export const geminiAdapter: ProviderAdapter = {
   displayName: "Google Gemini",
 
   supportedModels: [
+    "gemini-3.5-flash",
+    "gemini-3.1-pro",
+    "gemini-3.1-flash-lite",
     "gemini-2.5-pro",
     "gemini-2.5-flash",
     "gemini-2.0-flash",
@@ -114,7 +117,7 @@ export const geminiAdapter: ProviderAdapter = {
     // We probe the models endpoint to harvest rate-limit headers.
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -140,7 +143,7 @@ export const geminiAdapter: ProviderAdapter = {
 
     return {
       provider: "gemini",
-      model: "gemini-2.5-pro",
+      model: "gemini-3.5-flash",
       tier: "free",
       inputTokens: partial.inputTokens ?? emptyBucket(),
       outputTokens: partial.outputTokens ?? emptyBucket(),
