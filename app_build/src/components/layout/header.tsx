@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Zap, Settings, Wifi, WifiOff } from "lucide-react";
 import Link from "next/link";
@@ -31,6 +32,30 @@ const statusConfig = {
 export function Header({ status }: HeaderProps) {
   const config = statusConfig[status];
   const { demoMode, setDemoMode } = useQuota();
+  const [latencyOverhead, setLatencyOverhead] = useState<number | null>(null);
+
+  useEffect(() => {
+    let unlistenOverhead: (() => void) | null = null;
+    const isTauri = typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__;
+    
+    async function setupListener() {
+      if (isTauri) {
+        try {
+          const { listen } = await import("@tauri-apps/api/event");
+          unlistenOverhead = await listen<{ overheadMs: number }>("proxy-overhead-updated", (event) => {
+            setLatencyOverhead(event.payload.overheadMs);
+          });
+        } catch (e) {
+          console.warn("Failed to listen for proxy overhead updates:", e);
+        }
+      }
+    }
+    
+    setupListener();
+    return () => {
+      if (unlistenOverhead) unlistenOverhead();
+    };
+  }, []);
 
   return (
     <header
@@ -97,10 +122,10 @@ export function Header({ status }: HeaderProps) {
         <div className="flex items-center gap-2">
           <Wifi size={12} style={{ color: "hsl(var(--text-tertiary))" }} />
           <span
-            className="text-[11px]"
+            className="text-[11px] select-none"
             style={{ color: "hsl(var(--text-tertiary))" }}
           >
-            Proxy Active
+            Proxy Active {latencyOverhead !== null ? `(overhead: ${latencyOverhead < 0.1 ? "<0.1" : latencyOverhead.toFixed(1)}ms)` : ""}
           </span>
         </div>
 

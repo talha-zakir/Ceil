@@ -34,6 +34,15 @@ const providerIcons: Record<string, React.ElementType> = {
   mistral: Wind,
 };
 
+const getOSName = () => {
+  if (typeof window === "undefined") return "Secure Keychain";
+  const ua = window.navigator.userAgent;
+  if (ua.indexOf("Win") !== -1) return "Windows Credential Manager";
+  if (ua.indexOf("Mac") !== -1) return "macOS Keychain";
+  if (ua.indexOf("Linux") !== -1) return "Linux Secret Service";
+  return "Secure Keychain";
+};
+
 export function ApiKeyForm() {
   const [keys, setKeys] = useState<Record<string, ProviderKeyState>>(() => {
     const initial: Record<string, ProviderKeyState> = {};
@@ -211,8 +220,14 @@ export function ApiKeyForm() {
               </div>
 
               {/* Status Badge */}
-              {state.status !== "idle" && (
-                <motion.div
+              <div className="flex items-center gap-2">
+                {state.status === "connected" && (
+                  <span className="text-[10px] text-slate-400 bg-slate-800/80 border border-white/[0.05] px-2 py-0.5 rounded font-medium flex items-center gap-1">
+                    🔒 Secured in {getOSName()}
+                  </span>
+                )}
+                {state.status !== "idle" && (
+                  <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium"
@@ -243,6 +258,7 @@ export function ApiKeyForm() {
                       : "Invalid Key"}
                 </motion.div>
               )}
+              </div>
             </div>
 
             {/* Key Input */}

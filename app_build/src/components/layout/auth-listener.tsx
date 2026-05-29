@@ -42,6 +42,12 @@ function isOutdatedVersion(current: string, required: string): boolean {
   return false;
 }
 
+const showNativeNotification = (title: string, body: string) => {
+  if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+    new Notification(title, { body });
+  }
+};
+
 export function AuthListener() {
   const [isOutdated, setIsOutdated] = useState(false);
   const [updateMessage, setUpdateMessage] = useState("");
@@ -51,6 +57,13 @@ export function AuthListener() {
     let unlistenAuth: UnlistenFn | null = null;
     let unlistenCap: UnlistenFn | null = null;
     let unlistenFailover: UnlistenFn | null = null;
+
+    // Request desktop notification permission on mount
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    }
 
     async function setupListeners() {
       const isTauri = typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__;
@@ -94,15 +107,19 @@ export function AuthListener() {
               duration: 8000,
               id: `safety-cap-${type}`, // Prevent duplicate toasts for same event type
             });
+            showNativeNotification(title, message);
           });
 
           // 4. Listen for proxy auto-failovers
           unlistenFailover = await listen<FailoverPayload>("failover-occurred", (event) => {
             const { original, fallback } = event.payload;
-            toast.warning("Auto-Failover Triggered", {
-              description: `Provider "${original}" rate-limited. Re-routing request to "${fallback}"...`,
+            const title = "Auto-Failover Triggered";
+            const message = `Provider "${original}" rate-limited. Re-routing request to "${fallback}"...`;
+            toast.warning(title, {
+              description: message,
               duration: 5000,
             });
+            showNativeNotification(title, message);
           });
 
         } catch (err) {

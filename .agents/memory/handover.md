@@ -31,9 +31,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 ---
 
 ## 🔄 Current Pipeline State
-- **Active Step**: `Completed` (All Phases & Priority Milestones Finished)
-- **Last Updated**: 2026-05-29T15:55:00+09:00
-- **Current Objective**: Standalone client binary compiled and deployed in `production_artifacts/`. Landing page, dynamic proxy check notifications, and remote version checker fully integrated.
+- **Active Step**: `Completed` (MVP Cost & Safety Enhancements fully integrated and compiled)
+- **Last Updated**: 2026-05-30T00:50:00+09:00
+- **Current Objective**: OS-Native keychain badges, dynamic optimization JSON exporter, native notifications, and proxy latency monitoring successfully implemented and compiled into the release binary.
 
 ---
 
@@ -80,13 +80,21 @@ This file serves as the persistent memory for the Antigravity development team. 
 
 ## ⚠️ Known Issues / Next Actions
 1. **RESOLVED**: WiX packaging skipped due to folder name path ampersand limit. Replaced by compiling standalone `ceil.exe` release binary to the artifacts path directly.
-2. **FUTURE UPDATES & VERSION CONTROL METHOD**:
+2. **RESOLVED**: Fixed the issue where What-If Routing widget displayed mock dollars ($3.15 spent / $3.08 saved) even with Demo Mode OFF and no API keys configured. Removed hardcoded mock token fallbacks so that the app renders a clean, premium "Awaiting Live API Traffic" empty state instead.
+3. **FUTURE UPDATES & VERSION CONTROL METHOD**:
    - When you launch a major update:
      1. Build the updated binary: `node node_modules/@tauri-apps/cli/tauri.js build --no-bundle`
      2. Move the new `app.exe` to `production_artifacts/ceil.exe`.
      3. Update the `min_required` (and/or `latest`) version values inside `production_artifacts/version.json` (e.g. to `"0.2.0"`).
      4. Push the changes to GitHub.
      5. Outdated desktop applications will automatically fetch the new `version.json` config on boot, lock themselves, and redirect developers to download the latest binary.
+4. **VERIFIED VERCEL PRODUCTION DEPLOYMENT**: Next.js frontend is deployed live on Vercel. Configured the project's Root Directory setting to `app_build` and uploaded all environment variables (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`).
+5. **LOCAL RUNNING VERIFIED**: Tested Next.js dev server and compiled Tauri `app.exe` locally. Both run correctly and local proxy successfully binds to port 9999.
+6. **ENHANCEMENTS COMPLETED**:
+   - OS-native keychain badges indicating exactly where keys are saved (Windows Credential Manager / macOS Keychain).
+   - Cost optimizer calculation uses live token statistics and allows config exporting (`ceil-routing-[scenario].json`).
+   - Browser HTML5 notification integration triggers system tray push bubbles when runaway caps or failover rules execute.
+   - Real-time proxy latency overhead tracking computes processing overhead in microseconds and displays it in the header (`0.2ms overhead`).
 
 ---
 

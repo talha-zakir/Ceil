@@ -93,6 +93,8 @@ async fn handle_request(
     app_handle: AppHandle,
     client: Client,
 ) -> Result<Response<Full<Bytes>>, Infallible> {
+    let total_start = std::time::Instant::now();
+    let mut upstream_duration = std::time::Duration::from_secs(0);
     let method = req.method().clone();
     let mut target_url = req.uri().to_string();
     
@@ -251,7 +253,10 @@ async fn handle_request(
     
     req_builder = req_builder.body(body_bytes.clone());
     
+    let upstream_start = std::time::Instant::now();
     let res = req_builder.send().await;
+    let first_elapsed = upstream_start.elapsed();
+    upstream_duration = first_elapsed;
 
     match res {
         Ok(response) => {
@@ -285,7 +290,10 @@ async fn handle_request(
                         }
                         
                         fallback_builder = fallback_builder.body(body_bytes);
+                        let fallback_start = std::time::Instant::now();
                         if let Ok(fallback_res) = fallback_builder.send().await {
+                            let fallback_elapsed = fallback_start.elapsed();
+                            upstream_duration = fallback_elapsed;
                             info!("Auto-failover request succeeded with status: {}", fallback_res.status());
                             
                             // Emit notification event to Next.js UI
@@ -298,6 +306,14 @@ async fn handle_request(
                             let res_bytes = fallback_res.bytes().await.unwrap_or_default();
                             parse_usage_and_add_spend(&res_bytes, &rewritten_url, &app_handle);
                             
+                            // Calculate proxy overhead and emit
+                            let total_elapsed = total_start.elapsed();
+                            let overhead = total_elapsed.saturating_sub(upstream_duration);
+                            let overhead_ms = overhead.as_secs_f64() * 1000.0;
+                            let _ = app_handle.emit("proxy-overhead-updated", serde_json::json!({
+                                "overheadMs": overhead_ms
+                            }));
+
                             // Build a builder to rebuild response headers
                             let hyper_resp = Response::builder().status(200);
                             // Set headers and body
@@ -313,6 +329,14 @@ async fn handle_request(
             let res_bytes = response.bytes().await.unwrap_or_default();
             parse_usage_and_add_spend(&res_bytes, &target_url, &app_handle);
 
+            // Calculate proxy overhead and emit
+            let total_elapsed = total_start.elapsed();
+            let overhead = total_elapsed.saturating_sub(upstream_duration);
+            let overhead_ms = overhead.as_secs_f64() * 1000.0;
+            let _ = app_handle.emit("proxy-overhead-updated", serde_json::json!({
+                "overheadMs": overhead_ms
+            }));
+
             let mut hyper_resp = Response::builder().status(status_code);
             if let Some(headers_mut) = hyper_resp.headers_mut() {
                 for (key, value) in &headers {
@@ -327,6 +351,13 @@ async fn handle_request(
         }
         Err(e) => {
             error!("Proxy request failed: {}", e);
+            
+            // Calculate proxy overhead and emit
+            let total_elapsed = total_start.elapsed();
+            let _ = app_handle.emit("proxy-overhead-updated", serde_json::json!({
+                "overheadMs": total_elapsed.as_secs_f64() * 1000.0
+            }));
+
             let response = Response::builder()
                 .status(502)
                 .body(Full::new(Bytes::from("Bad Gateway")))

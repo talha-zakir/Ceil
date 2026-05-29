@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { 
   TrendingDown, 
   Sparkles, 
@@ -11,7 +12,8 @@ import {
   ArrowRight, 
   CheckCircle2, 
   AlertTriangle,
-  Info
+  Info,
+  Download
 } from "lucide-react";
 import type { NormalizedQuota } from "@/lib/providers/types";
 
@@ -25,8 +27,43 @@ export function CostOptimizer({ quotas }: CostOptimizerProps) {
   // Calculate session tokens from active premium models (openai, anthropic)
   const premiumQuotas = quotas.filter(q => q.provider === "anthropic" || q.provider === "openai");
   
-  const totalInputTokens = premiumQuotas.reduce((sum, q) => sum + (q.inputTokens?.used ?? 0), 0) || 450000; // fallback default
-  const totalOutputTokens = premiumQuotas.reduce((sum, q) => sum + (q.outputTokens?.used ?? 0), 0) || 120000; // fallback default
+  const totalInputTokens = premiumQuotas.reduce((sum, q) => sum + (q.inputTokens?.used ?? 0), 0);
+  const totalOutputTokens = premiumQuotas.reduce((sum, q) => sum + (q.outputTokens?.used ?? 0), 0);
+
+  if (totalInputTokens === 0 && totalOutputTokens === 0) {
+    return (
+      <div 
+        className="w-full rounded-xl border border-white/[0.06] bg-white/[0.02] p-8 backdrop-blur-sm space-y-4 text-center"
+      >
+        <div className="flex flex-col items-center justify-center py-8 max-w-md mx-auto space-y-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-900 border border-white/[0.05] flex items-center justify-center shadow-lg shadow-black/40">
+            <TrendingDown size={22} className="text-slate-500 animate-pulse" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-sm font-semibold text-[hsl(var(--text-primary))]">
+              Awaiting Live API Traffic
+            </h3>
+            <p className="text-xs text-[hsl(var(--text-muted))] leading-relaxed">
+              Ceil computes your "What-If" routing recommendations based on your actual, live token distributions.
+              Once you route your LLM queries through the local proxy, Ceil will dynamically calculate your cost savings here.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/settings"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg transition-all border border-slate-700 hover:border-slate-500 text-slate-200 hover:text-white cursor-pointer shadow-lg hover:shadow-black/20"
+              style={{
+                background: "hsl(var(--bg-secondary))",
+              }}
+            >
+              <span>Connect API Key</span>
+              <ArrowRight size={12} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Pricing constants (per 1M tokens)
   // Claude 4.8 Opus / GPT-5.5 average
@@ -68,12 +105,45 @@ export function CostOptimizer({ quotas }: CostOptimizerProps) {
         { task: "Highly critical production bug hotfixes", safe: false }
       ];
 
+  const handleExportConfig = () => {
+    const configData = {
+      project: "Ceil Cost Optimizer",
+      scenario: selectedScenario === "flash" ? "Tier 3 Flash Optimization" : "Tier 2 general coding Optimization",
+      target_tokens: {
+        input: totalInputTokens,
+        output: totalOutputTokens
+      },
+      estimated_savings: `$${savings.toFixed(2)} (${savingsPercent.toFixed(0)}%)`,
+      routing_rules: selectedScenario === "flash" 
+        ? {
+            "unit_testing_and_boilerplate": "gemini-3.5-flash",
+            "json_formatting_and_schema_enforcement": "gemini-3.5-flash",
+            "code_documentation_and_comments": "gemini-3.5-flash",
+            "complex_algorithmic_architecture": "claude-4.8-opus"
+          }
+        : {
+            "general_agentic_debugging": "gpt-5.5-instant",
+            "context_gathering_and_codebase_search": "gpt-5.5-instant",
+            "multi_file_refactoring_steps": "gpt-5.5-instant",
+            "highly_critical_production_bug_hotfixes": "claude-4.8-opus"
+          }
+    };
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(configData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `ceil-routing-${selectedScenario}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
   return (
     <div 
       className="w-full rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 backdrop-blur-sm space-y-6"
     >
       {/* Title block */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-[var(--color-openai)]/[0.1] flex items-center justify-center">
             <TrendingDown size={16} className="text-[var(--color-openai)]" />
@@ -88,27 +158,41 @@ export function CostOptimizer({ quotas }: CostOptimizerProps) {
           </div>
         </div>
 
-        {/* Toggle scenarios */}
-        <div className="flex bg-[hsl(var(--bg-tertiary))] p-0.5 rounded-lg border border-white/[0.04]">
+        <div className="flex items-center gap-3">
+          {/* Toggle scenarios */}
+          <div className="flex bg-[hsl(var(--bg-tertiary))] p-0.5 rounded-lg border border-white/[0.04]">
+            <button
+              onClick={() => setSelectedScenario("flash")}
+              className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all ${
+                selectedScenario === "flash" 
+                  ? "bg-[hsl(var(--bg-secondary))] text-[hsl(var(--text-primary))] shadow-sm" 
+                  : "text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-secondary))]"
+              }`}
+            >
+              Swap to Flash (Tier 3)
+            </button>
+            <button
+              onClick={() => setSelectedScenario("pro-gp")}
+              className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all ${
+                selectedScenario === "pro-gp" 
+                  ? "bg-[hsl(var(--bg-secondary))] text-[hsl(var(--text-primary))] shadow-sm" 
+                  : "text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-secondary))]"
+              }`}
+            >
+              Swap to GPT-5.5-instant (Tier 2)
+            </button>
+          </div>
+
+          {/* Export config button */}
           <button
-            onClick={() => setSelectedScenario("flash")}
-            className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all ${
-              selectedScenario === "flash" 
-                ? "bg-[hsl(var(--bg-secondary))] text-[hsl(var(--text-primary))] shadow-sm" 
-                : "text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-secondary))]"
-            }`}
+            onClick={handleExportConfig}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all border border-slate-700 hover:border-slate-500 text-slate-200 hover:text-white cursor-pointer"
+            style={{
+              background: "hsl(var(--bg-secondary))",
+            }}
           >
-            Swap to Flash (Tier 3)
-          </button>
-          <button
-            onClick={() => setSelectedScenario("pro-gp")}
-            className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-all ${
-              selectedScenario === "pro-gp" 
-                ? "bg-[hsl(var(--bg-secondary))] text-[hsl(var(--text-primary))] shadow-sm" 
-                : "text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-secondary))]"
-            }`}
-          >
-            Swap to GPT-5.5-instant (Tier 2)
+            <Download size={13} />
+            <span>Export Config</span>
           </button>
         </div>
       </div>

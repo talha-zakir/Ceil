@@ -105,7 +105,9 @@ export default function SettingsPage() {
         >
           {activeTab === "keys" && <ApiKeyForm />}
           {activeTab === "alerts" && <AlertConfig />}
-          {activeTab === "providers" && <ProviderToggle />}
+          {activeTab === "providers" && (
+            <ProviderToggle onConfigureClick={() => setActiveTab("keys")} />
+          )}
           {activeTab === "routing" && <RoutingConfig />}
           {activeTab === "billing" && <BillingPanel />}
         </motion.div>

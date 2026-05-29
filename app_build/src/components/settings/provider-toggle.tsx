@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -23,7 +23,11 @@ const providerIcons: Record<string, React.ElementType> = {
   mistral: Wind,
 };
 
-export function ProviderToggle() {
+interface ProviderToggleProps {
+  onConfigureClick?: () => void;
+}
+
+export function ProviderToggle({ onConfigureClick }: ProviderToggleProps) {
   const [enabled, setEnabled] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     PROVIDER_LIST.forEach((p) => {
@@ -32,15 +36,38 @@ export function ProviderToggle() {
     return initial;
   });
 
-  // Simulate connection status (in production, this would come from keychain check)
-  const [connected] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    PROVIDER_LIST.forEach((p, i) => {
-      // Mock: first 3 providers are connected
-      initial[p.id] = i < 3;
-    });
-    return initial;
-  });
+  const [connected, setConnected] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    async function checkKeys() {
+      const initial: Record<string, boolean> = {};
+      const isTauri = typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__;
+      
+      if (isTauri) {
+        try {
+          const { invoke } = await import("@tauri-apps/api/core");
+          for (const p of PROVIDER_LIST) {
+            try {
+              const saved: string = await invoke("get_api_key", { provider: p.id });
+              initial[p.id] = !!saved;
+            } catch (err) {
+              initial[p.id] = false;
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to check keychain keys:", e);
+        }
+      } else {
+        PROVIDER_LIST.forEach((p) => {
+          const saved = typeof window !== "undefined" ? localStorage.getItem(`apikey_${p.id}`) : "";
+          initial[p.id] = !!saved;
+        });
+      }
+      setConnected(initial);
+    }
+    
+    checkKeys();
+  }, []);
 
   const toggleProvider = (id: string) => {
     setEnabled((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -129,7 +156,8 @@ export function ProviderToggle() {
 
                   {/* Configure Link */}
                   <button
-                    className="text-[11px] flex items-center gap-0.5 transition-colors"
+                    onClick={onConfigureClick}
+                    className="text-[11px] flex items-center gap-0.5 transition-colors cursor-pointer"
                     style={{ color: `hsl(${provider.color} / 0.7)` }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.color = `hsl(${provider.color})`;
