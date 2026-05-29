@@ -32,17 +32,19 @@ export function useCostHistory(initialPeriod: Period = "7d"): UseCostHistoryRetu
   const [period, setPeriod] = useState<Period>(initialPeriod);
   const [data, setData] = useState<CostDataPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [demoMode, setDemoMode] = useState<boolean>(() => {
+  const [demoMode, setDemoMode] = useState<boolean>(true);
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("ceil_demo_mode");
       if (saved !== null) {
-        return JSON.parse(saved);
+        setDemoMode(JSON.parse(saved));
+      } else {
+        const isTauri = !!(window as any).__TAURI_INTERNALS__;
+        setDemoMode(!isTauri);
       }
-      const isTauri = !!(window as any).__TAURI_INTERNALS__;
-      return !isTauri;
     }
-    return true;
-  });
+  }, []);
 
   const fetchData = useCallback((p: Period, isDemo: boolean) => {
     setIsLoading(true);

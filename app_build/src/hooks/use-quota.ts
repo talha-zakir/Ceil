@@ -97,21 +97,22 @@ interface RequestLoggedPayload {
 }
 
 export function useQuota(): UseQuotaReturn {
-  const [demoMode, setDemoModeState] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ceil_demo_mode");
-      if (saved !== null) {
-        return JSON.parse(saved);
-      }
-      const isTauri = !!(window as any).__TAURI_INTERNALS__;
-      return !isTauri; // Web-only defaults to true, Tauri defaults to false
-    }
-    return true;
-  });
-
+  const [demoMode, setDemoModeState] = useState<boolean>(true);
   const [quotas, setQuotas] = useState<NormalizedQuota[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("ceil_demo_mode");
+      if (saved !== null) {
+        setDemoModeState(JSON.parse(saved));
+      } else {
+        const isTauri = !!(window as any).__TAURI_INTERNALS__;
+        setDemoModeState(!isTauri);
+      }
+    }
+  }, []);
 
   const setDemoMode = useCallback((val: boolean) => {
     if (typeof window !== "undefined") {
