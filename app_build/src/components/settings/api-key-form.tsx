@@ -87,16 +87,29 @@ export function ApiKeyForm() {
       [id]: { ...prev[id], status: "testing" },
     }));
 
-    // Simulate API key validation
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      let isConnected = false;
+      if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+        isConnected = await invoke("test_api_key", { provider: id, apiKey: keys[id].key });
+      } else {
+        // Fallback for standalone web browser mode
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        isConnected = keys[id].key.length > 20;
+      }
 
-    setKeys((prev) => ({
-      ...prev,
-      [id]: {
-        ...prev[id],
-        status: prev[id].key.length > 10 ? "connected" : "error",
-      },
-    }));
+      setKeys((prev) => ({
+        ...prev,
+        [id]: {
+          ...prev[id],
+          status: isConnected ? "connected" : "error",
+        },
+      }));
+    } catch (err) {
+      setKeys((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], status: "error" },
+      }));
+    }
   };
 
   const saveKey = async (id: string) => {

@@ -192,14 +192,55 @@ async fn handle_request(
 
     info!("Proxying request to {}", target_url);
 
+    let provider = get_provider_from_url(&target_url);
+    let keychain_key = crate::keychain::get_api_key(provider.clone()).ok().flatten();
+
     let mut req_builder = client.request(
         reqwest::Method::from_bytes(method.as_str().as_bytes()).unwrap_or(reqwest::Method::GET),
         &target_url,
     );
     
+    let mut has_auth = false;
     for (key, value) in &req_headers {
-        if key.to_lowercase() != "host" {
+        let name_str = key.to_lowercase();
+        if name_str != "host" {
+            let is_auth = name_str == "authorization" 
+                || name_str == "api-key" 
+                || name_str == "x-api-key" 
+                || name_str == "x-goog-api-key";
+
+            if is_auth {
+                has_auth = true;
+                if let Some(ref k) = keychain_key {
+                    let incoming_auth = std::str::from_utf8(value).unwrap_or("");
+                    let is_placeholder = incoming_auth.is_empty() 
+                        || incoming_auth.contains("placeholder")
+                        || incoming_auth.contains("mock")
+                        || incoming_auth.contains("test")
+                        || incoming_auth.len() < 25;
+
+                    if is_placeholder {
+                        let auth_val = format_auth_header(&provider, k);
+                        req_builder = req_builder.header(key, &auth_val);
+                        continue;
+                    }
+                }
+            }
             req_builder = req_builder.header(key, value.as_slice());
+        }
+    }
+
+    if !has_auth {
+        if let Some(ref k) = keychain_key {
+            let (auth_name, auth_val) = match provider.as_str() {
+                "openai" => ("authorization", format!("Bearer {}", k)),
+                "anthropic" => ("x-api-key", k.to_string()),
+                "gemini" => ("x-goog-api-key", k.to_string()),
+                "groq" => ("authorization", format!("Bearer {}", k)),
+                "mistral" => ("authorization", format!("Bearer {}", k)),
+                _ => ("authorization", format!("Bearer {}", k)),
+            };
+            req_builder = req_builder.header(auth_name, &auth_val);
         }
     }
     

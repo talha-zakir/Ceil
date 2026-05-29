@@ -27,9 +27,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 ---
 
 ## 🔄 Current Pipeline State
-- **Active Step**: `@engineer` (Phase 15 — Transitioning to Real Data Complete)
-- **Last Updated**: 2026-05-29T14:50:00+09:00
-- **Current Objective**: Transition to real LLM API tracking functional. The proxy correctly emits rate-limit and request cost logs, and the frontend persists them locally in browser localStorage, with an interactive Demo Mode toggle in the header.
+- **Active Step**: `@engineer` (Phase 16–17 Real-time validation, Key injection, and Offline cache Complete)
+- **Last Updated**: 2026-05-29T15:00:00+09:00
+- **Current Objective**: Key settings form connects to actual upstream validation, local proxy injects keys on-the-fly, and Supabase pricing uses localStorage caches for offline resilience.
 
 ---
 
@@ -52,6 +52,8 @@ This file serves as the persistent memory for the Antigravity development team. 
   - [x] Phase 13: Rogue Loop Detection & Budget Caps (Owner: `@engineer`) — Sliding-window velocity limiter, daily spend cap, `cap-triggered` events.
   - [x] Phase 14: "What-If" Routing Intelligence UI (Owner: `@engineer`) — Cost optimizer widget with HumanEval accuracy tradeoff display.
   - [x] Phase 15: Transition to Real Data (Priority 1) (Owner: `@engineer`) — Local micro-proxy event hooks, localStorage persistence for quotas and transaction logs, header Demo Mode toggle switch, and real-time alerts.
+  - [x] Phase 16: Key Injection & Real Validations (Priority 2) (Owner: `@engineer`) — Real upstream key validation endpoint, settings UI integration, and on-the-fly header injection.
+  - [x] Phase 17: Pricing Offline Fallbacks (Priority 3) (Owner: `@engineer`) — localStorage caching and offline Promise.race timeouts for Supabase configurations.
 
 ---
 
@@ -71,6 +73,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 - `app_build/src/hooks/use-cost-history.ts`: Persistent local transaction log analyzer for dynamic CostChart drawing.
 - `app_build/src/components/layout/header.tsx`: Header navigation bar with animated Demo Mode switch.
 - `app_build/src/components/layout/auth-listener.tsx`: Global Tauri event toaster for safety triggers and failover events.
+- `app_build/src-tauri/src/keychain.rs`: Secure keychain module with added `test_api_key` endpoint validation command.
+- `app_build/src/components/settings/api-key-form.tsx`: API keys input form wired to use Tauri's real-time connection validation.
+- `app_build/src/hooks/use-pricing.ts`: Dynamic pricing fetcher equipped with local storage caches and query timeouts for offline support.
 
 ---
 

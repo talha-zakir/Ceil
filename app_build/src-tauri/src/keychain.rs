@@ -33,3 +33,56 @@ pub fn delete_api_key(provider: String) -> Result<(), String> {
         Err(e) => Err(e.to_string()),
     }
 }
+
+#[command]
+pub async fn test_api_key(provider: String, apiKey: String) -> Result<bool, String> {
+    let client = reqwest::Client::new();
+    match provider.as_str() {
+        "openai" => {
+            let res = client.get("https://api.openai.com/v1/models")
+                .header("Authorization", format!("Bearer {}", apiKey))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(res.status().is_success())
+        }
+        "anthropic" => {
+            let res = client.post("https://api.anthropic.com/v1/messages")
+                .header("x-api-key", &apiKey)
+                .header("anthropic-version", "2023-06-01")
+                .json(&serde_json::json!({
+                    "model": "claude-3-5-sonnet-20241022",
+                    "max_tokens": 1,
+                    "messages": [{"role": "user", "content": "Ping"}]
+                }))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(res.status() != reqwest::StatusCode::UNAUTHORIZED && res.status() != reqwest::StatusCode::FORBIDDEN)
+        }
+        "gemini" => {
+            let res = client.get(format!("https://generativelanguage.googleapis.com/v1beta/models?key={}", apiKey))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(res.status().is_success())
+        }
+        "groq" => {
+            let res = client.get("https://api.groq.com/openai/v1/models")
+                .header("Authorization", format!("Bearer {}", apiKey))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(res.status().is_success())
+        }
+        "mistral" => {
+            let res = client.get("https://api.mistral.ai/v1/models")
+                .header("Authorization", format!("Bearer {}", apiKey))
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+            Ok(res.status().is_success())
+        }
+        _ => Err("Unknown provider".to_string()),
+    }
+}

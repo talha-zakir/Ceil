@@ -73,6 +73,7 @@ pub fn run() {
             keychain::save_api_key,
             keychain::get_api_key,
             keychain::delete_api_key,
+            keychain::test_api_key,
             update_proxy_config
         ])
         .run(tauri::generate_context!())
