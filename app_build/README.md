@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛡️ Ceil — AI API Cost & Quota Dashboard
 
-## Getting Started
+**Privacy-first, real-time LLM usage monitoring for indie developers.**
 
-First, run the development server:
+Ceil is a modern developer tool that monitors, optimizes, and secures your LLM API usage. It operates via a local micro-proxy to parse rate limits and inject credentials on-the-fly, keeping your API keys securely stored in your local OS Keychain.
 
+---
+
+## 🚀 Getting Started
+
+### 1. Local Setup
+Follow the instructions in our [**Local Setup & Security Guide**](file:///C:/0_Antigravity%20Template/Codelab_Antigravity/5_AI%20API%20Cost%20&%20Quota%20Dashboard/app_build/LOCAL_SETUP.md) to copy environment templates (`.env.local`) and configure Clerk, Supabase, and Stripe variables.
+
+### 2. Run the Desktop Shell (Tauri)
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependencies
+npm install
+
+# Run in Tauri dev mode (launches Next.js + local proxy + desktop view)
+npm run tauri dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Run Web Interface Only
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view the web dashboard.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔒 Security Assurance: Zero-Leak BYOK Architecture
+Ceil is engineered so that your secret keys never touch Vercel, cloud servers, or local storage:
+- **OS Credential Manager**: Your keys are saved directly into macOS Keychain or Windows Credential Manager.
+- **On-the-Fly Injection**: Your codebase uses placeholder keys (like `sk-placeholder-key`) pointing to our local proxy `http://localhost:9999/v1`. The local proxy injects the real key on-the-fly.
+- **Vercel Static Export**: If deployed to Vercel, the app exports as a static web interface that connects *locally* to the proxy on your loopback address. No keys are ever transmitted upstream.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For details, see [**LOCAL_SETUP.md**](file:///C:/0_Antigravity%20Template/Codelab_Antigravity/5_AI%20API%20Cost%20&%20Quota%20Dashboard/app_build/LOCAL_SETUP.md).
