@@ -32,7 +32,7 @@ This file serves as the persistent memory for the Antigravity development team. 
 
 ## 🔄 Current Pipeline State
 - **Active Step**: `Completed` (MVP Cost & Safety Enhancements fully integrated and compiled)
-- **Last Updated**: 2026-05-30T01:30:00+09:00
+- **Last Updated**: 2026-05-30T01:36:00+09:00
 - **Current Objective**: OS-Native keychain badges, dynamic optimization JSON exporter, native notifications, and proxy latency monitoring successfully implemented and compiled into the release binary.
 
 ---
@@ -84,16 +84,17 @@ This file serves as the persistent memory for the Antigravity development team. 
 3. **RESOLVED**: Fixed page scrolling issue where users could not scroll down in the web browser or Tauri app. Changed body overflow from hidden to auto in `globals.css` to allow normal viewport scroll mechanics on the landing page and settings panel.
 4. **RESOLVED**: Added Host, Origin, and Referer header validation in the Rust local proxy (`proxy.rs`) to prevent unauthorized cross-origin requests from external web scripts from abusing the local credentials injection.
 5. **RESOLVED**: Added a live connection status card at the top of the Settings API Keys tab, which pings `localhost:9999` every 5 seconds to indicate if the proxy background listener is active or blocked.
-6. **FUTURE UPDATES & VERSION CONTROL METHOD**:
+6. **RESOLVED**: Fixed provider toggle settings reset bug by persisting toggle states to localStorage (`provider_enabled_${id}`) and dynamically filtering dashboard metrics in `useQuota()` so toggling off a provider suspends its tracking.
+7. **FUTURE UPDATES & VERSION CONTROL METHOD**:
    - When you launch a major update:
      1. Build the updated binary: `node node_modules/@tauri-apps/cli/tauri.js build --no-bundle`
      2. Move the new `app.exe` to `production_artifacts/ceil.exe`.
      3. Update the `min_required` (and/or `latest`) version values inside `production_artifacts/version.json` (e.g. to `"0.2.0"`).
      4. Push the changes to GitHub.
      5. Outdated desktop applications will automatically fetch the new `version.json` config on boot, lock themselves, and redirect developers to download the latest binary.
-7. **VERIFIED VERCEL PRODUCTION DEPLOYMENT**: Next.js frontend is deployed live on Vercel. Configured the project's Root Directory setting to `app_build` and uploaded all environment variables (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`).
-8. **LOCAL RUNNING VERIFIED**: Tested Next.js dev server and compiled Tauri `app.exe` locally. Both run correctly and local proxy successfully binds to port 9999.
-9. **ENHANCEMENTS COMPLETED**:
+8. **VERIFIED VERCEL PRODUCTION DEPLOYMENT**: Next.js frontend is deployed live on Vercel. Configured the project's Root Directory setting to `app_build` and uploaded all environment variables (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_STRIPE_PAYMENT_LINK`).
+9. **LOCAL RUNNING VERIFIED**: Tested Next.js dev server and compiled Tauri `app.exe` locally. Both run correctly and local proxy successfully binds to port 9999.
+10. **ENHANCEMENTS COMPLETED**:
    - OS-native keychain badges indicating exactly where keys are saved (Windows Credential Manager / macOS Keychain).
    - Cost optimizer calculation uses live token statistics and allows config exporting (`ceil-routing-[scenario].json`).
    - Browser HTML5 notification integration triggers system tray push bubbles when runaway caps or failover rules execute.

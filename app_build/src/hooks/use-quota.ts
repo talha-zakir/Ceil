@@ -295,7 +295,17 @@ export function useQuota(): UseQuotaReturn {
     return () => clearInterval(interval);
   }, [demoMode, fetchQuotas]);
 
-  return { quotas, isLoading, error, refetch: fetchQuotas, demoMode, setDemoMode };
+  const filteredQuotas = quotas.filter((q) => {
+    if (typeof window !== "undefined") {
+      const val = localStorage.getItem(`provider_enabled_${q.provider}`);
+      if (val !== null) {
+        return val === "true";
+      }
+    }
+    return true;
+  });
+
+  return { quotas: filteredQuotas, isLoading, error, refetch: fetchQuotas, demoMode, setDemoMode };
 }
 
 export default useQuota;

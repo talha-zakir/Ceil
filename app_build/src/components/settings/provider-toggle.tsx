@@ -31,7 +31,14 @@ export function ProviderToggle({ onConfigureClick }: ProviderToggleProps) {
   const [enabled, setEnabled] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     PROVIDER_LIST.forEach((p) => {
-      initial[p.id] = true;
+      let saved = true;
+      if (typeof window !== "undefined") {
+        const val = localStorage.getItem(`provider_enabled_${p.id}`);
+        if (val !== null) {
+          saved = val === "true";
+        }
+      }
+      initial[p.id] = saved;
     });
     return initial;
   });
@@ -70,7 +77,13 @@ export function ProviderToggle({ onConfigureClick }: ProviderToggleProps) {
   }, []);
 
   const toggleProvider = (id: string) => {
-    setEnabled((prev) => ({ ...prev, [id]: !prev[id] }));
+    setEnabled((prev) => {
+      const nextVal = !prev[id];
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`provider_enabled_${id}`, String(nextVal));
+      }
+      return { ...prev, [id]: nextVal };
+    });
   };
 
   return (
