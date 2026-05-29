@@ -10,6 +10,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 - **Monetization**: $9/mo subscription.
 - **Core Philosophy**: "Anti-SaaS", high-intent, visually stunning, and entirely privacy-focused (Bring Your Own Key).
 - **Selected Tech Stack**: Next.js 15 (App Router, Static HTML Export), TypeScript, Tailwind CSS v4, shadcn/ui, Framer Motion, Sonner (toasts), Tremor/Recharts (charts), Tauri (Rust desktop shell), Supabase (PostgreSQL + Edge Functions), Clerk (Auth via deep-link), Stripe (Payments), OS Keychain (Secure key storage)
+- **Unified Landing Page / Web App Route**: Single-entry page routing (`src/app/page.tsx`) that detects the host environment. Browser/Vercel loads a premium landing page with 2 CTAs (Demo Sandbox vs. Desktop App Download). Tauri bypasses it, rendering the live dashboard console directly.
+- **Dynamic Proxy Offline Banner**: The Next.js dashboard detects local proxy status on mount via loopback ping check. Shows a warning ribbon and redirects to download links if `localhost:9999` is offline.
+- **Critical Force-Update Block**: Tauri desktop shell queries `version.json` from GitHub raw repository link. If the client version is lower than `min_required`, access is strictly locked behind a fullscreen blurred update overlay.
 
 ---
 
@@ -23,13 +26,14 @@ This file serves as the persistent memory for the Antigravity development team. 
 - **BYOK (Bring Your Own Key)** — Keys stored in OS-native Keychain (Apple Keychain / Windows Credential Manager), never in localStorage or remote DB
 - **Zero Data Retention** — Only polls billing/usage endpoints and header data; never reads, stores, or proxies prompt/completion text
 - **Dark-mode-first** UI inspired by Linear, Vercel, and Arc Browser
+- **Force-Update & Version Control**: Host `version.json` in `production_artifacts` on GitHub. Next.js app running inside Tauri validates current client version against `min_required` parameters on boot to block outdated executables.
 
 ---
 
 ## 🔄 Current Pipeline State
-- **Active Step**: `@engineer` (Phase 16–17 Real-time validation, Key injection, and Offline cache Complete)
-- **Last Updated**: 2026-05-29T15:00:00+09:00
-- **Current Objective**: Key settings form connects to actual upstream validation, local proxy injects keys on-the-fly, and Supabase pricing uses localStorage caches for offline resilience.
+- **Active Step**: `Completed` (All Phases & Priority Milestones Finished)
+- **Last Updated**: 2026-05-29T15:55:00+09:00
+- **Current Objective**: Standalone client binary compiled and deployed in `production_artifacts/`. Landing page, dynamic proxy check notifications, and remote version checker fully integrated.
 
 ---
 
@@ -47,45 +51,42 @@ This file serves as the persistent memory for the Antigravity development team. 
   - [x] Phase 8: Velocity alerts & notification system (Frontend Integration)
   - [x] Phase 9: Clerk deep-link auth + Stripe subscription
   - [x] Phase 10: Dynamic pricing config polling
-  - [x] Phase 11: Deployment & Distribution
+  - [x] Phase 11: Deployment & Distribution (Desktop wrapper built, standalone binary compiled)
   - [x] Phase 12: Smart Auto-Failover (Owner: `@engineer`) — Opt-in failover proxy, fallback chain mapping, Tauri IPC config sync.
   - [x] Phase 13: Rogue Loop Detection & Budget Caps (Owner: `@engineer`) — Sliding-window velocity limiter, daily spend cap, `cap-triggered` events.
   - [x] Phase 14: "What-If" Routing Intelligence UI (Owner: `@engineer`) — Cost optimizer widget with HumanEval accuracy tradeoff display.
   - [x] Phase 15: Transition to Real Data (Priority 1) (Owner: `@engineer`) — Local micro-proxy event hooks, localStorage persistence for quotas and transaction logs, header Demo Mode toggle switch, and real-time alerts.
   - [x] Phase 16: Key Injection & Real Validations (Priority 2) (Owner: `@engineer`) — Real upstream key validation endpoint, settings UI integration, and on-the-fly header injection.
   - [x] Phase 17: Pricing Offline Fallbacks (Priority 3) (Owner: `@engineer`) — localStorage caching and offline Promise.race timeouts for Supabase configurations.
+  - [x] Phase 18: Model Family Modernization (Owner: `@engineer`) — Recognize modern flagship models, update settings config fallback mapping, cost optimizers, mock generator templates, and provider registry.
+  - [x] Phase 19: Landing Page, Proxy Status Banner, and Force-Update Blocker (Owner: `@engineer`) — Dynamic host routing, loopback proxy ping checks, warning banners, and remote version control modal.
 
 ---
 
 ## 🛠️ Modified Files & Structure
 - `production_artifacts/implementation_plans/Technical_Specification.md`: Approved specification.
 - `task.md`: Complete tracking checklist (all phases complete).
-- `walkthrough.md`: Compilation fixes and structural updates details.
-- `app_build/src-tauri/target/release/app.exe`: Compiled native standalone desktop application binary.
-- `app_build/src-tauri/tauri.conf.json`: Configured production bundle identifier and direct Node build hooks.
-- `app_build/src-tauri/src/main.rs`, `keychain.rs`, `proxy.rs`, `deeplink.rs`: Tauri and local proxy Rust logic.
-- `app_build/src/components/providers/clerk-provider-wrapper.tsx`: CSR Clerk Provider wrapper.
-- `app_build/src/lib/supabase/client.ts`, `app_build/src/hooks/use-pricing.ts`: Supabase pricing client and hook.
-- `app_build/src/components/settings/billing-panel.tsx`: Stripe billing panel view.
-- `app_build/src/components/settings/routing-config.tsx`: Failover toggle, budget caps, rogue loop protection UI.
-- `app_build/src/components/dashboard/cost-optimizer.tsx`: "What-If" Routing Intelligence cost-accuracy widget.
-- `app_build/src/hooks/use-quota.ts`: Persistent local storage quota state with rate-limit and usage event listeners.
-- `app_build/src/hooks/use-cost-history.ts`: Persistent local transaction log analyzer for dynamic CostChart drawing.
-- `app_build/src/components/layout/header.tsx`: Header navigation bar with animated Demo Mode switch.
-- `app_build/src/components/layout/auth-listener.tsx`: Global Tauri event toaster for safety triggers and failover events.
-- `app_build/src-tauri/src/keychain.rs`: Secure keychain module with added `test_api_key` endpoint validation command.
-- `app_build/src/components/settings/api-key-form.tsx`: API keys input form wired to use Tauri's real-time connection validation.
-- `app_build/src/hooks/use-pricing.ts`: Dynamic pricing fetcher equipped with local storage caches and query timeouts for offline support.
+- `walkthrough.md`: Final completion details and feature summary.
+- `production_artifacts/ceil.exe`: Standalone release desktop executable.
+- `production_artifacts/version.json`: Dynamic version config parameters for remote check.
+- `app_build/LOCAL_SETUP.md` & `app_build/README.md`: Environment setup guides and documentation.
+- `app_build/.env.example`: Local environment template.
+- `app_build/src/app/page.tsx`: Landing page, connection checking, and main dashboard view.
+- `app_build/src/components/layout/auth-listener.tsx`: Global event toaster with added auto-update check and blocking popup modal.
+- `app_build/src-tauri/src/main.rs`, `keychain.rs`, `proxy.rs`, `deeplink.rs`: Tauri backend Rust proxy layer.
+- `app_build/src/components/settings/routing-config.tsx`: Safety, failover, and caps config card.
 
 ---
 
 ## ⚠️ Known Issues / Next Actions
-1. **RESOLVED**: Clerk `ClerkRuntimeError` crash — fixed by decoding base64 publishable key payload and bypassing `ClerkProvider` when key is invalid.
-2. **RESOLVED**: Duplicate React key warning (`mistral`) — fixed by using `provider-model` composite key.
-3. **RESOLVED**: User updated Clerk publishable key to a valid domain (`fun-tortoise-19.clerk.accounts.dev`).
-4. **NOTE**: The WiX installer packaging (`.msi`) was skipped due to a known command argument limitation with the ampersand character (`&`) in the folder name path. The standalone executable is fully self-contained and ready to run.
-5. **NOTE**: The `CLERK_SECRET_KEY` in `.env.local` is a server-side secret and should NOT be committed to Git. Verify `.gitignore` includes `.env.local`.
-6. **NEXT**: Rebuild Tauri desktop binary with updated Clerk key: `node node_modules/@tauri-apps/cli/tauri.js build --no-bundle`
+1. **RESOLVED**: WiX packaging skipped due to folder name path ampersand limit. Replaced by compiling standalone `ceil.exe` release binary to the artifacts path directly.
+2. **FUTURE UPDATES & VERSION CONTROL METHOD**:
+   - When you launch a major update:
+     1. Build the updated binary: `node node_modules/@tauri-apps/cli/tauri.js build --no-bundle`
+     2. Move the new `app.exe` to `production_artifacts/ceil.exe`.
+     3. Update the `min_required` (and/or `latest`) version values inside `production_artifacts/version.json` (e.g. to `"0.2.0"`).
+     4. Push the changes to GitHub.
+     5. Outdated desktop applications will automatically fetch the new `version.json` config on boot, lock themselves, and redirect developers to download the latest binary.
 
 ---
 
