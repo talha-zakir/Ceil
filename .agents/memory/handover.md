@@ -27,9 +27,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 ---
 
 ## 🔄 Current Pipeline State
-- **Active Step**: `@engineer` (Billing & Auth Complete)
-- **Last Updated**: 2026-05-29T11:05:00+09:00
-- **Current Objective**: Move to Phase 11 (Deployment & Distribution).
+- **Active Step**: `@devops` (Deployment & Distribution)
+- **Last Updated**: 2026-05-29T11:08:00+09:00
+- **Current Objective**: Phase 11: Deployment & Distribution (Build & compile Tauri production binaries)
 
 ---
 
@@ -49,21 +49,22 @@ This file serves as the persistent memory for the Antigravity development team. 
   - [x] Phase 10: Dynamic pricing config polling
   - [ ] Phase 11: Deployment & Distribution
 - [x] **4. Compilation & UI Verification** (Owner: `@engineer`) — Typescript build passes.
-- [ ] **5. Local Hosting & Testing** (Owner: `@devops`)
+- [/] **5. Local Hosting & Testing** (Owner: `@devops`)
 - [ ] **6. Desktop Build & Distribution** (Owner: `@devops`)
 
 ---
 
 ## 🛠️ Modified Files & Structure
-- `production_artifacts/implementation_plans/Technical_Specification.md`: The approved Technical Specification for the project
-- `task.md`: Current step-by-step progress checklist
-- `walkthrough.md`: Details of the Next.js compilation fixes
-- `app_build/`: The Next.js Next 15 project codebase is fully scaffolded with all components and hooks.
-- `.agents/memory/handover.md`: Updated for UI completion
-- `.agents/memory/log.md`: Updated with build success
+- `production_artifacts/implementation_plans/Technical_Specification.md`: Approved specification.
+- `task.md`: Complete tracking checklist (updated up to Phase 10).
+- `walkthrough.md`: Compilation fixes and structural updates details.
+- `app_build/src-tauri/src/main.rs`, `keychain.rs`, `proxy.rs`, `deeplink.rs`: Tauri and local proxy Rust logic.
+- `app_build/src/components/providers/clerk-provider-wrapper.tsx`: CSR Clerk Provider wrapper.
+- `app_build/src/lib/supabase/client.ts`, `app_build/src/hooks/use-pricing.ts`: Supabase pricing client and hook.
+- `app_build/src/components/settings/billing-panel.tsx`: Stripe billing panel view.
 
 ---
 
 ## ⚠️ Known Issues / Next Actions
-1. **NEXT**: User can run `npm run dev` in the `app_build/` directory to view the static mock dashboard locally.
-2. **NEXT**: The proxy engineer (@proxy-engineer) should step in to implement the Tauri application and the Rust `localhost:9999` proxy server.
+1. **NEXT**: The DevOps Master (`@devops`) needs to verify local dev server execution and test the frontend with Tauri events.
+2. **NEXT**: Build and package the production Tauri app installer (`npm run tauri build` or `cargo tauri build`) for local distribution.
