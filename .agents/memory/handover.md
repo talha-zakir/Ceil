@@ -31,9 +31,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 ---
 
 ## 🔄 Current Pipeline State
-- **Active Step**: `Completed` (MVP Cost & Safety Enhancements fully integrated and compiled)
-- **Last Updated**: 2026-05-30T01:36:00+09:00
-- **Current Objective**: OS-Native keychain badges, dynamic optimization JSON exporter, native notifications, and proxy latency monitoring successfully implemented and compiled into the release binary.
+- **Active Step**: `Testing & Verification` (Developer Alerts Sandbox Simulator integrated and pushed to GitHub)
+- **Last Updated**: 2026-05-30T02:50:00+09:00
+- **Current Objective**: Enable user to manually trigger and test safety alerts (Daily Budget Spend Cap, Rogue Loop spike detector, and Auto-Failover events) via developer simulator dashboard controls.
 
 ---
 
@@ -60,6 +60,7 @@ This file serves as the persistent memory for the Antigravity development team. 
   - [x] Phase 17: Pricing Offline Fallbacks (Priority 3) (Owner: `@engineer`) — localStorage caching and offline Promise.race timeouts for Supabase configurations.
   - [x] Phase 18: Model Family Modernization (Owner: `@engineer`) — Recognize modern flagship models, update settings config fallback mapping, cost optimizers, mock generator templates, and provider registry.
   - [x] Phase 19: Landing Page, Proxy Status Banner, and Force-Update Blocker (Owner: `@engineer`) — Dynamic host routing, loopback proxy ping checks, warning banners, and remote version control modal.
+  - [x] Phase 20: Developer Simulator Sandbox for Verification (Owner: `@engineer`) — Integrated Rust simulation command (`simulate_safety_event`) and added developer dashboard triggers in `alert-config.tsx` with revert controls.
 
 ---
 
@@ -129,3 +130,12 @@ If any of the newly added cost safety, failover, or routing intelligence feature
   - Delete the `<CostOptimizer quotas={quotas} />` element block and its import statement: `import { CostOptimizer } from "@/components/dashboard/cost-optimizer";`.
 - **UI File**:
   - Delete `app_build/src/components/dashboard/cost-optimizer.tsx` completely.
+
+### 4. Reverting Developer Sandbox Alerts Simulator
+- **Next.js UI (`app_build/src/components/settings/alert-config.tsx`)**:
+  - Delete the "Alert Simulation Sandbox" JSX layout block.
+  - Delete `triggerTestNotification` function and imports `toast` and `showVelocityAlert` if unused.
+- **Rust Tauri Command (`app_build/src-tauri/src/proxy.rs`)**:
+  - Remove `simulate_safety_event` Rust command definition from `proxy.rs`.
+- **Tauri Register Handler (`app_build/src-tauri/src/lib.rs`)**:
+  - Remove `simulate_safety_event` from the `tauri::generate_handler![...]` array in `lib.rs`.
