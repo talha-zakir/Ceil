@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Zap, Settings, Wifi, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { useQuota } from "@/hooks/use-quota";
 
 interface HeaderProps {
   status: "healthy" | "warning" | "critical";
@@ -29,6 +30,7 @@ const statusConfig = {
 
 export function Header({ status }: HeaderProps) {
   const config = statusConfig[status];
+  const { demoMode, setDemoMode } = useQuota();
 
   return (
     <header
@@ -71,6 +73,26 @@ export function Header({ status }: HeaderProps) {
 
       {/* Right: Status + Settings */}
       <div className="flex items-center gap-4">
+        {/* Demo Mode Toggle */}
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md" style={{ background: "hsl(var(--bg-secondary))", border: "1px solid hsl(var(--border-subtle))" }}>
+          <span className="text-[10px] font-medium tracking-wide uppercase" style={{ color: demoMode ? "hsl(var(--color-openai))" : "hsl(var(--text-muted))" }}>
+            Demo
+          </span>
+          <button
+            onClick={() => setDemoMode(!demoMode)}
+            className="relative w-8 h-4 rounded-full transition-colors duration-200"
+            style={{
+              background: demoMode ? "hsl(var(--color-openai) / 0.8)" : "hsl(var(--bg-tertiary))",
+            }}
+          >
+            <motion.div
+              className="absolute top-0.5 w-3 h-3 rounded-full bg-white"
+              animate={{ left: demoMode ? 18 : 2 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+        </div>
+
         {/* Connection Status */}
         <div className="flex items-center gap-2">
           <Wifi size={12} style={{ color: "hsl(var(--text-tertiary))" }} />

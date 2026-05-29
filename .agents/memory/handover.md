@@ -27,9 +27,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 ---
 
 ## 🔄 Current Pipeline State
-- **Active Step**: `@engineer` (Phase 12–14 Safety & Routing Features Complete)
-- **Last Updated**: 2026-05-29T14:20:00+09:00
-- **Current Objective**: Local dev testing with valid Clerk auth key. All 14 phases implemented and compiling cleanly.
+- **Active Step**: `@engineer` (Phase 15 — Transitioning to Real Data Complete)
+- **Last Updated**: 2026-05-29T14:50:00+09:00
+- **Current Objective**: Transition to real LLM API tracking functional. The proxy correctly emits rate-limit and request cost logs, and the frontend persists them locally in browser localStorage, with an interactive Demo Mode toggle in the header.
 
 ---
 
@@ -48,12 +48,10 @@ This file serves as the persistent memory for the Antigravity development team. 
   - [x] Phase 9: Clerk deep-link auth + Stripe subscription
   - [x] Phase 10: Dynamic pricing config polling
   - [x] Phase 11: Deployment & Distribution
-- [x] **4. Compilation & UI Verification** (Owner: `@engineer`) — Typescript build passes.
-- [x] **5. Local Hosting & Testing** (Owner: `@devops`) — Local Next.js build passes.
-- [x] **6. Desktop Build & Distribution** (Owner: `@devops`) — Tauri standalone `app.exe` compiled successfully.
-- [x] **7. Phase 12: Smart Auto-Failover** (Owner: `@engineer`) — Opt-in failover proxy, fallback chain mapping, Tauri IPC config sync.
-- [x] **8. Phase 13: Rogue Loop Detection & Budget Caps** (Owner: `@engineer`) — Sliding-window velocity limiter, daily spend cap, `cap-triggered` events.
-- [x] **9. Phase 14: "What-If" Routing Intelligence UI** (Owner: `@engineer`) — Cost optimizer widget with HumanEval accuracy tradeoff display.
+  - [x] Phase 12: Smart Auto-Failover (Owner: `@engineer`) — Opt-in failover proxy, fallback chain mapping, Tauri IPC config sync.
+  - [x] Phase 13: Rogue Loop Detection & Budget Caps (Owner: `@engineer`) — Sliding-window velocity limiter, daily spend cap, `cap-triggered` events.
+  - [x] Phase 14: "What-If" Routing Intelligence UI (Owner: `@engineer`) — Cost optimizer widget with HumanEval accuracy tradeoff display.
+  - [x] Phase 15: Transition to Real Data (Priority 1) (Owner: `@engineer`) — Local micro-proxy event hooks, localStorage persistence for quotas and transaction logs, header Demo Mode toggle switch, and real-time alerts.
 
 ---
 
@@ -69,7 +67,10 @@ This file serves as the persistent memory for the Antigravity development team. 
 - `app_build/src/components/settings/billing-panel.tsx`: Stripe billing panel view.
 - `app_build/src/components/settings/routing-config.tsx`: Failover toggle, budget caps, rogue loop protection UI.
 - `app_build/src/components/dashboard/cost-optimizer.tsx`: "What-If" Routing Intelligence cost-accuracy widget.
-- `app_build/src/components/providers/clerk-provider-wrapper.tsx`: Graceful Clerk bypass when key is invalid/placeholder.
+- `app_build/src/hooks/use-quota.ts`: Persistent local storage quota state with rate-limit and usage event listeners.
+- `app_build/src/hooks/use-cost-history.ts`: Persistent local transaction log analyzer for dynamic CostChart drawing.
+- `app_build/src/components/layout/header.tsx`: Header navigation bar with animated Demo Mode switch.
+- `app_build/src/components/layout/auth-listener.tsx`: Global Tauri event toaster for safety triggers and failover events.
 
 ---
 

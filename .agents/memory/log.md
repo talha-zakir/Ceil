@@ -18,4 +18,4 @@ This log registers every major milestone, transition, and action completed by th
 | 2026-05-29T12:30 | @engineer | Clerk Runtime Fix | Fixed `ClerkRuntimeError` crash by decoding base64 key payload and bypassing ClerkProvider when key is invalid. Fixed duplicate React key warning for `mistral` provider (multiple models share same provider id). |
 | 2026-05-29T14:19 | User | Clerk Key Updated | User replaced placeholder Clerk publishable key with valid key (`fun-tortoise-19.clerk.accounts.dev`). Added `CLERK_SECRET_KEY`. |
 | 2026-05-29T14:20 | System | Memory Sync | Memory synchronized via `/sync` command. All 14 phases documented. Rollback guide preserved. |
-
+| 2026-05-29T14:50 | @engineer | Transition to Real Data | Implemented Phase 15: wired up rate-limit header parsing in Rust proxy, added `request-logged` events, created client-side localStorage database (under `ceil_quotas` and `ceil_transactions`), added animated Demo Mode toggle in Header, and added global Tauri event toasts for cap triggers and failover events. |

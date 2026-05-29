@@ -253,6 +253,7 @@ async fn handle_request(
                                 "fallback": fallback_provider
                             }));
                             
+                            extract_and_emit_rate_limits(&fallback_res, &app_handle, &rewritten_url);
                             let res_bytes = fallback_res.bytes().await.unwrap_or_default();
                             parse_usage_and_add_spend(&res_bytes, &rewritten_url, &app_handle);
                             
@@ -267,6 +268,7 @@ async fn handle_request(
 
             let status_code = response.status().as_u16();
             let headers = response.headers().clone();
+            extract_and_emit_rate_limits(&response, &app_handle, &target_url);
             let res_bytes = response.bytes().await.unwrap_or_default();
             parse_usage_and_add_spend(&res_bytes, &target_url, &app_handle);
 
@@ -343,18 +345,18 @@ async fn build_hyper_response(res: reqwest::Response) -> Result<Response<Full<By
 
 fn extract_and_emit_rate_limits(res: &reqwest::Response, app: &AppHandle, url: &str) {
     let headers = res.headers();
-    let mut provider = "Unknown".to_string();
+    let mut provider = "unknown".to_string();
     
     if url.contains("api.openai.com") {
-        provider = "OpenAI".to_string();
+        provider = "openai".to_string();
     } else if url.contains("api.anthropic.com") {
-        provider = "Anthropic".to_string();
+        provider = "anthropic".to_string();
     } else if url.contains("api.groq.com") {
-        provider = "Groq".to_string();
+        provider = "groq".to_string();
     } else if url.contains("api.mistral.ai") {
-        provider = "Mistral".to_string();
+        provider = "mistral".to_string();
     } else if url.contains("generativelanguage.googleapis.com") {
-        provider = "Gemini".to_string();
+        provider = "gemini".to_string();
     }
     
     let limit = headers.get("x-ratelimit-limit-requests")
@@ -433,6 +435,15 @@ fn parse_usage_and_add_spend(body: &[u8], url: &str, app: &AppHandle) {
                     }));
                 }
             }
+            
+            // Emit detailed request usage log for local frontend tracking
+            let _ = app.emit("request-logged", serde_json::json!({
+                "provider": provider,
+                "model": model,
+                "inputTokens": input_tokens,
+                "outputTokens": output_tokens,
+                "cost": cost
+            }));
         }
     }
 }
