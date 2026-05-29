@@ -33,6 +33,7 @@ export function Header({ status }: HeaderProps) {
   const config = statusConfig[status];
   const { demoMode, setDemoMode } = useQuota();
   const [latencyOverhead, setLatencyOverhead] = useState<number | null>(null);
+  const [proxyOnline, setProxyOnline] = useState<boolean | null>(null);
 
   useEffect(() => {
     let unlistenOverhead: (() => void) | null = null;
@@ -55,6 +56,28 @@ export function Header({ status }: HeaderProps) {
     return () => {
       if (unlistenOverhead) unlistenOverhead();
     };
+  }, []);
+
+  useEffect(() => {
+    const checkProxyStatus = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1000);
+        await fetch("http://localhost:9999/", {
+          method: "GET",
+          mode: "no-cors",
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        setProxyOnline(true);
+      } catch (e) {
+        setProxyOnline(false);
+      }
+    };
+
+    checkProxyStatus();
+    const interval = setInterval(checkProxyStatus, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -119,15 +142,42 @@ export function Header({ status }: HeaderProps) {
         </div>
 
         {/* Connection Status */}
-        <div className="flex items-center gap-2">
-          <Wifi size={12} style={{ color: "hsl(var(--text-tertiary))" }} />
-          <span
-            className="text-[11px] select-none"
-            style={{ color: "hsl(var(--text-tertiary))" }}
+        {proxyOnline !== null && (
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-medium select-none"
+            style={{
+              background: proxyOnline 
+                ? "hsl(var(--color-healthy) / 0.05)" 
+                : "hsl(var(--color-warning) / 0.05)",
+              borderColor: proxyOnline 
+                ? "hsl(var(--color-healthy) / 0.15)" 
+                : "hsl(var(--color-warning) / 0.15)",
+            }}
           >
-            Proxy Active {latencyOverhead !== null ? `(overhead: ${latencyOverhead < 0.1 ? "<0.1" : latencyOverhead.toFixed(1)}ms)` : ""}
-          </span>
-        </div>
+            {proxyOnline ? (
+              <Wifi
+                size={11}
+                className="animate-pulse"
+                style={{ color: "hsl(var(--color-healthy))" }}
+              />
+            ) : (
+              <WifiOff
+                size={11}
+                style={{ color: "hsl(var(--color-warning))" }}
+              />
+            )}
+            <span
+              style={{
+                color: proxyOnline
+                  ? "hsl(var(--color-healthy))"
+                  : "hsl(var(--color-warning))"
+              }}
+            >
+              {proxyOnline 
+                ? `Proxy Active ${latencyOverhead !== null ? `(${latencyOverhead < 0.1 ? "<0.1" : latencyOverhead.toFixed(1)}ms)` : ""}` 
+                : "Proxy Offline"}
+            </span>
+          </div>
+        )}
 
         {/* System Status Dot */}
         <div className="flex items-center gap-2">
