@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { AuthListener } from "@/components/layout/auth-listener";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,6 +46,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased noise`}
         suppressHydrationWarning
       >
+        <AuthListener />
         {children}
         <Toaster
           theme="dark"

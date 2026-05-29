@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { invoke } from "@tauri-apps/api/core";
 import {
   Eye,
   EyeOff,
@@ -37,10 +38,34 @@ export function ApiKeyForm() {
   const [keys, setKeys] = useState<Record<string, ProviderKeyState>>(() => {
     const initial: Record<string, ProviderKeyState> = {};
     PROVIDER_LIST.forEach((p) => {
-      initial[p.id] = { key: "", visible: false, status: "idle" };
+      let saved = "";
+      if (typeof window !== "undefined") {
+        saved = localStorage.getItem(`apikey_${p.id}`) || "";
+      }
+      initial[p.id] = { key: saved, visible: false, status: saved ? "connected" : "idle" };
     });
     return initial;
   });
+
+  useEffect(() => {
+    async function loadKeysFromKeychain() {
+      if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+        const updatedKeys = { ...keys };
+        for (const p of PROVIDER_LIST) {
+          try {
+            const saved: string = await invoke("get_api_key", { provider: p.id });
+            if (saved) {
+              updatedKeys[p.id] = { key: saved, visible: false, status: "connected" };
+            }
+          } catch (err) {
+            // No key found or error
+          }
+        }
+        setKeys(updatedKeys);
+      }
+    }
+    loadKeysFromKeychain();
+  }, []);
 
   const updateKey = (id: string, value: string) => {
     setKeys((prev) => ({
@@ -74,11 +99,17 @@ export function ApiKeyForm() {
     }));
   };
 
-  const saveKey = (id: string) => {
-    // In production, this would save to OS Keychain via Tauri
-    // For now, save to localStorage as a development fallback
-    if (typeof window !== "undefined") {
-      localStorage.setItem(`apikey_${id}`, keys[id].key);
+  const saveKey = async (id: string) => {
+    try {
+      if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+        await invoke("save_api_key", { provider: id, apiKey: keys[id].key });
+      } else {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(`apikey_${id}`, keys[id].key);
+        }
+      }
+    } catch (err) {
+      console.error(`Failed to save key for ${id}:`, err);
     }
   };
 

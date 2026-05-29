@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { NormalizedQuota } from "@/lib/providers/types";
 import { generateAllMockQuotas } from "@/lib/mock/generator";
 import { DEFAULT_POLL_INTERVAL_MS } from "@/lib/constants";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
 interface UseQuotaReturn {
   quotas: NormalizedQuota[];
@@ -19,8 +20,7 @@ export function useQuota(): UseQuotaReturn {
 
   const fetchQuotas = useCallback(() => {
     try {
-      // In development, use mock data
-      // In production, this would call the Tauri backend / proxy
+      // Fetch initial mock data or fallback if Tauri fails
       const data = generateAllMockQuotas();
       setQuotas(data);
       setError(null);
@@ -33,12 +33,44 @@ export function useQuota(): UseQuotaReturn {
 
   useEffect(() => {
     fetchQuotas();
+    let unlisten: UnlistenFn | null = null;
 
+    async function setupTauriListener() {
+      try {
+        if (typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__) {
+          unlisten = await listen<NormalizedQuota>("rate-limit-updated", (event) => {
+            setQuotas((prev) => {
+              const newQuota = event.payload;
+              const existing = prev.findIndex((q) => q.provider === newQuota.provider);
+              if (existing >= 0) {
+                const updated = [...prev];
+                updated[existing] = newQuota;
+                return updated;
+              }
+              return [...prev, newQuota];
+            });
+          });
+        }
+      } catch (err) {
+        console.warn("Tauri event listener failed to attach", err);
+      }
+    }
+
+    setupTauriListener();
+
+    // Fallback polling for when not running in Tauri (e.g. web dev server)
     const interval = setInterval(() => {
-      fetchQuotas();
+      if (typeof window === "undefined" || !(window as any).__TAURI_INTERNALS__) {
+        fetchQuotas();
+      }
     }, DEFAULT_POLL_INTERVAL_MS);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (unlisten) {
+        unlisten();
+      }
+    };
   }, [fetchQuotas]);
 
   return { quotas, isLoading, error, refetch: fetchQuotas };
