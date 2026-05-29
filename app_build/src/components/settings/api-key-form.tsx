@@ -17,6 +17,10 @@ import {
   Wind,
   Wifi,
   WifiOff,
+  Terminal,
+  ChevronDown,
+  ChevronUp,
+  Copy,
 } from "lucide-react";
 import { PROVIDER_LIST } from "@/lib/constants";
 
@@ -47,6 +51,15 @@ const getOSName = () => {
 
 export function ApiKeyForm() {
   const [proxyOnline, setProxyOnline] = useState<boolean | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
+  const [guideTab, setGuideTab] = useState<"bash" | "powershell" | "tools">("bash");
+  const [copiedText, setCopiedText] = useState(false);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 2000);
+  };
   const [keys, setKeys] = useState<Record<string, ProviderKeyState>>(() => {
     const initial: Record<string, ProviderKeyState> = {};
     PROVIDER_LIST.forEach((p) => {
@@ -208,6 +221,191 @@ export function ApiKeyForm() {
           </div>
         </motion.div>
       )}
+
+      {/* CLI & Terminal Integration Guide */}
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          border: "1px solid hsl(var(--border-subtle))",
+          background: "hsl(var(--bg-secondary))",
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setShowGuide(!showGuide)}
+          className="w-full flex items-center justify-between p-4 text-left transition-colors hover:bg-white/[0.02] cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5">
+            <div
+              className="flex items-center justify-center w-7 h-7 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+            >
+              <Terminal size={14} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold" style={{ color: "hsl(var(--text-primary))" }}>
+                Terminal & CLI Agent Integration Guide
+              </p>
+              <p className="text-[10px]" style={{ color: "hsl(var(--text-muted))" }}>
+                Learn how to route external commands, Claude Code, or IDE extensions through Ceil.
+              </p>
+            </div>
+          </div>
+          <div style={{ color: "hsl(var(--text-muted))" }}>
+            {showGuide ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </div>
+        </button>
+
+        {showGuide && (
+          <div
+            className="p-4 border-t space-y-4"
+            style={{
+              borderColor: "hsl(var(--border-subtle))",
+            }}
+          >
+            <p className="text-xs leading-relaxed" style={{ color: "hsl(var(--text-secondary))" }}>
+              To track API usage in real-time, enforce spend limits, and block runaway loops, you must configure your CLI tools or agent systems to route their requests through Ceil's local proxy. This is done by setting environment variables in your terminal window:
+            </p>
+
+            {/* Tab Selectors */}
+            <div className="flex gap-1.5 border-b pb-2" style={{ borderColor: "hsl(var(--border-subtle))" }}>
+              <button
+                type="button"
+                onClick={() => setGuideTab("bash")}
+                className="px-2.5 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer"
+                style={{
+                  background: guideTab === "bash" ? "hsl(var(--bg-root))" : "transparent",
+                  color: guideTab === "bash" ? "hsl(var(--text-primary))" : "hsl(var(--text-muted))",
+                  border: guideTab === "bash" ? "1px solid hsl(var(--border-default))" : "1px solid transparent",
+                }}
+              >
+                Bash / Zsh (macOS & Linux)
+              </button>
+              <button
+                type="button"
+                onClick={() => setGuideTab("powershell")}
+                className="px-2.5 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer"
+                style={{
+                  background: guideTab === "powershell" ? "hsl(var(--bg-root))" : "transparent",
+                  color: guideTab === "powershell" ? "hsl(var(--text-primary))" : "hsl(var(--text-muted))",
+                  border: guideTab === "powershell" ? "1px solid hsl(var(--border-default))" : "1px solid transparent",
+                }}
+              >
+                PowerShell (Windows)
+              </button>
+              <button
+                type="button"
+                onClick={() => setGuideTab("tools")}
+                className="px-2.5 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer"
+                style={{
+                  background: guideTab === "tools" ? "hsl(var(--bg-root))" : "transparent",
+                  color: guideTab === "tools" ? "hsl(var(--text-primary))" : "hsl(var(--text-muted))",
+                  border: guideTab === "tools" ? "1px solid hsl(var(--border-default))" : "1px solid transparent",
+                }}
+              >
+                Python & Node SDKs
+              </button>
+            </div>
+
+            {/* Tab Contents */}
+            {guideTab === "bash" && (
+              <div className="space-y-2">
+                <div className="relative">
+                  <pre
+                    className="p-3 rounded-lg text-[10px] font-mono overflow-x-auto leading-relaxed"
+                    style={{
+                      background: "hsl(var(--bg-root))",
+                      color: "hsl(var(--text-secondary))",
+                      border: "1px solid hsl(var(--border-subtle))",
+                    }}
+                  >
+                    {`export HTTP_PROXY="http://localhost:9999"
+export HTTPS_PROXY="http://localhost:9999"`}
+                  </pre>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(`export HTTP_PROXY="http://localhost:9999"\nexport HTTPS_PROXY="http://localhost:9999"`)}
+                    className="absolute top-2.5 right-2.5 p-1.5 rounded transition-colors hover:bg-white/[0.04] text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-secondary))] cursor-pointer"
+                  >
+                    {copiedText ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                  </button>
+                </div>
+                <p className="text-[10px]" style={{ color: "hsl(var(--text-muted))" }}>
+                  Run these commands in your bash/zsh shell before launching command line agents (e.g. Claude Code or git cli).
+                </p>
+              </div>
+            )}
+
+            {guideTab === "powershell" && (
+              <div className="space-y-2">
+                <div className="relative">
+                  <pre
+                    className="p-3 rounded-lg text-[10px] font-mono overflow-x-auto leading-relaxed"
+                    style={{
+                      background: "hsl(var(--bg-root))",
+                      color: "hsl(var(--text-secondary))",
+                      border: "1px solid hsl(var(--border-subtle))",
+                    }}
+                  >
+                    {`$env:HTTP_PROXY="http://localhost:9999"
+$env:HTTPS_PROXY="http://localhost:9999"`}
+                  </pre>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(`$env:HTTP_PROXY="http://localhost:9999"\n$env:HTTPS_PROXY="http://localhost:9999"`)}
+                    className="absolute top-2.5 right-2.5 p-1.5 rounded transition-colors hover:bg-white/[0.04] text-[hsl(var(--text-muted))] hover:text-[hsl(var(--text-secondary))] cursor-pointer"
+                  >
+                    {copiedText ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                  </button>
+                </div>
+                <p className="text-[10px]" style={{ color: "hsl(var(--text-muted))" }}>
+                  Run these commands in your PowerShell console to route commands in the current session.
+                </p>
+              </div>
+            )}
+
+            {guideTab === "tools" && (
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold" style={{ color: "hsl(var(--text-primary))" }}>Python (Requests / OpenAI Client):</p>
+                  <pre
+                    className="p-2.5 rounded-lg text-[9px] font-mono overflow-x-auto leading-relaxed"
+                    style={{
+                      background: "hsl(var(--bg-root))",
+                      color: "hsl(var(--text-secondary))",
+                      border: "1px solid hsl(var(--border-subtle))",
+                    }}
+                  >
+                    {`# Environment variables are automatically picked up, or set proxy manually:
+client = OpenAI(
+    api_key="your-api-key",
+    http_client=httpx.Client(proxies="http://localhost:9999")
+)`}
+                  </pre>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold" style={{ color: "hsl(var(--text-primary))" }}>Node.js SDKs:</p>
+                  <pre
+                    className="p-2.5 rounded-lg text-[9px] font-mono overflow-x-auto leading-relaxed"
+                    style={{
+                      background: "hsl(var(--bg-root))",
+                      color: "hsl(var(--text-secondary))",
+                      border: "1px solid hsl(var(--border-subtle))",
+                    }}
+                  >
+                    {`import { OpenAI } from 'openai';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+
+const openai = new OpenAI({
+  apiKey: 'your-api-key',
+  httpAgent: new HttpsProxyAgent('http://localhost:9999')
+});`}
+                  </pre>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Security Notice */}
       <div
