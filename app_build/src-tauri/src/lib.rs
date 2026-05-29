@@ -2,7 +2,7 @@ mod keychain;
 mod proxy;
 mod deeplink;
 
-use tauri::Manager;
+use tauri::Listener;
 use tauri::tray::TrayIconBuilder;
 use tauri::menu::{Menu, MenuItem};
 
@@ -17,14 +17,13 @@ pub fn run() {
             // Listen for deep link events
             let dl_handle = handle.clone();
             app.listen("deep-link://new-url", move |event| {
-                if let Some(payload) = event.payload() {
-                    if let Ok(urls) = serde_json::from_str::<Vec<String>>(payload) {
-                        for url in urls {
-                            deeplink::handle_deep_link(&dl_handle, url);
-                        }
-                    } else if let Ok(url) = serde_json::from_str::<String>(payload) {
+                let payload = event.payload();
+                if let Ok(urls) = serde_json::from_str::<Vec<String>>(payload) {
+                    for url in urls {
                         deeplink::handle_deep_link(&dl_handle, url);
                     }
+                } else if let Ok(url) = serde_json::from_str::<String>(payload) {
+                    deeplink::handle_deep_link(&dl_handle, url);
                 }
             });
 

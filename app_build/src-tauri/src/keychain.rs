@@ -1,6 +1,6 @@
 use keyring::Entry;
 use tauri::command;
-use log::{info, error};
+use log::info;
 
 #[command]
 pub fn save_api_key(service: String, key: String) -> Result<(), String> {
@@ -23,7 +23,7 @@ pub fn get_api_key(service: String) -> Result<Option<String>, String> {
 #[command]
 pub fn delete_api_key(service: String) -> Result<(), String> {
     let entry = Entry::new(&format!("ceil_dashboard_{}", service), "user").map_err(|e| e.to_string())?;
-    match entry.delete_password() {
+    match entry.delete_credential() {
         Ok(_) => {
             info!("Deleted API key for {}", service);
             Ok(())
