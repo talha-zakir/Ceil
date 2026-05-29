@@ -88,12 +88,72 @@ pub async fn start_proxy(app_handle: AppHandle) {
     }
 }
 
+fn is_authorized_origin(val: &str) -> bool {
+    let val_lower = val.to_lowercase();
+    // Allow Tauri app protocols
+    if val_lower.starts_with("tauri://") || val_lower.starts_with("https://tauri.localhost") {
+        return true;
+    }
+    // Allow localhost/127.0.0.1 origins
+    if val_lower.contains("://localhost") || val_lower.contains("://127.0.0.1") {
+        return true;
+    }
+    // Allow vercel.app domains (both subdomains and main domains)
+    if val_lower.contains(".vercel.app") || val_lower.contains("://vercel.app") {
+        return true;
+    }
+    false
+}
+
 async fn handle_request(
     req: Request<hyper::body::Incoming>,
     app_handle: AppHandle,
     client: Client,
 ) -> Result<Response<Full<Bytes>>, Infallible> {
     let total_start = std::time::Instant::now();
+
+    // 1. Host Validation
+    if let Some(host_val) = req.headers().get("host") {
+        if let Ok(host_str) = host_val.to_str() {
+            let host_lower = host_str.to_lowercase();
+            if !host_lower.starts_with("localhost") && !host_lower.starts_with("127.0.0.1") {
+                error!("Security Alert: Rejected request with unauthorized Host header: {}", host_str);
+                let resp = Response::builder()
+                    .status(403)
+                    .body(Full::new(Bytes::from("Forbidden: Request host must originate from loopback interface.")))
+                    .unwrap();
+                return Ok(resp);
+            }
+        }
+    }
+
+    // 2. Origin & Referer Validation
+    if let Some(origin_val) = req.headers().get("origin") {
+        if let Ok(origin_str) = origin_val.to_str() {
+            if !is_authorized_origin(origin_str) {
+                error!("Security Alert: Rejected request from unauthorized Origin: {}", origin_str);
+                let resp = Response::builder()
+                    .status(403)
+                    .body(Full::new(Bytes::from("Forbidden: Origin is unauthorized.")))
+                    .unwrap();
+                return Ok(resp);
+            }
+        }
+    }
+
+    if let Some(referer_val) = req.headers().get("referer") {
+        if let Ok(referer_str) = referer_val.to_str() {
+            if !is_authorized_origin(referer_str) {
+                error!("Security Alert: Rejected request from unauthorized Referer: {}", referer_str);
+                let resp = Response::builder()
+                    .status(403)
+                    .body(Full::new(Bytes::from("Forbidden: Referer is unauthorized.")))
+                    .unwrap();
+                return Ok(resp);
+            }
+        }
+    }
+
     let mut upstream_duration = std::time::Duration::from_secs(0);
     let method = req.method().clone();
     let mut target_url = req.uri().to_string();

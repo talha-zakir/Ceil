@@ -15,6 +15,8 @@ import {
   Cpu,
   Zap,
   Wind,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { PROVIDER_LIST } from "@/lib/constants";
 
@@ -44,6 +46,7 @@ const getOSName = () => {
 };
 
 export function ApiKeyForm() {
+  const [proxyOnline, setProxyOnline] = useState<boolean | null>(null);
   const [keys, setKeys] = useState<Record<string, ProviderKeyState>>(() => {
     const initial: Record<string, ProviderKeyState> = {};
     PROVIDER_LIST.forEach((p) => {
@@ -55,6 +58,28 @@ export function ApiKeyForm() {
     });
     return initial;
   });
+
+  useEffect(() => {
+    const checkProxyStatus = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1000);
+        await fetch("http://localhost:9999/", {
+          method: "GET",
+          mode: "no-cors",
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        setProxyOnline(true);
+      } catch (e) {
+        setProxyOnline(false);
+      }
+    };
+
+    checkProxyStatus();
+    const interval = setInterval(checkProxyStatus, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     async function loadKeysFromKeychain() {
@@ -137,6 +162,53 @@ export function ApiKeyForm() {
 
   return (
     <div className="space-y-6">
+      {/* Proxy Bind Status Indicator */}
+      {proxyOnline !== null && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-3 p-4 rounded-lg text-xs"
+          style={{
+            background: proxyOnline 
+              ? "hsl(var(--color-healthy) / 0.05)" 
+              : "hsl(var(--color-warning) / 0.05)",
+            border: proxyOnline 
+              ? "1px solid hsl(var(--color-healthy) / 0.15)" 
+              : "1px solid hsl(var(--color-warning) / 0.15)",
+          }}
+        >
+          {proxyOnline ? (
+            <Wifi
+              size={18}
+              className="shrink-0 mt-0.5 animate-pulse"
+              style={{ color: "hsl(var(--color-healthy))" }}
+            />
+          ) : (
+            <WifiOff
+              size={18}
+              className="shrink-0 mt-0.5"
+              style={{ color: "hsl(var(--color-warning))" }}
+            />
+          )}
+          <div>
+            <p
+              className="text-sm font-semibold"
+              style={{ color: proxyOnline ? "hsl(var(--color-healthy))" : "hsl(var(--color-warning))" }}
+            >
+              {proxyOnline ? "Local Proxy Connection Active" : "Local Proxy Offline"}
+            </p>
+            <p
+              className="text-xs mt-1 leading-relaxed"
+              style={{ color: "hsl(var(--text-tertiary))" }}
+            >
+              {proxyOnline 
+                ? "Ceil's background loopback connection is running on port 9999. Credential injection and real-time rate limit tracking are fully functional." 
+                : "The proxy server at localhost:9999 is unreachable. Ensure the native desktop app is running to enable rate limit monitoring and keychain injection."}
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Security Notice */}
       <div
         className="flex items-start gap-3 p-4 rounded-lg"
