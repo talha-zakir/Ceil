@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+jspm_packages/
+web_modules/
+
+# Python Virtual Environments & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# Build & Output
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Tauri & Rust
+target/
+*.rs.bk
+Cargo.lock
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+
+# IDEs & System Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Tauri Build Artifacts
+src-tauri/target/
+src-tauri/WixTools/
+src-tauri/icons/*.ico.bak
