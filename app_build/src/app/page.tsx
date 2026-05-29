@@ -18,6 +18,10 @@ import {
   Layers,
   Sparkles,
   CheckCircle,
+  AlertTriangle,
+  Play,
+  Terminal,
+  ShieldAlert,
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -58,8 +62,9 @@ export default function DashboardPage() {
   const { data: costData, period, setPeriod } = useCostHistory();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [proxyOnline, setProxyOnline] = useState<boolean | null>(null);
 
-  // Auto-detect Tauri shell to bypass landing page
+  // Auto-detect Tauri shell to bypass landing page and perform local proxy pings
   useEffect(() => {
     if (typeof window !== "undefined") {
       const isTauri = !!(window as any).__TAURI_INTERNALS__;
@@ -67,6 +72,27 @@ export default function DashboardPage() {
         setShowDashboard(true);
       }
     }
+
+    const checkProxyStatus = async () => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1000);
+        // Ping local proxy loopback
+        await fetch("http://localhost:9999/", {
+          method: "GET",
+          mode: "no-cors",
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        setProxyOnline(true);
+      } catch (e) {
+        setProxyOnline(false);
+      }
+    };
+
+    checkProxyStatus();
+    const interval = setInterval(checkProxyStatus, 8000);
+    return () => clearInterval(interval);
   }, []);
 
   // Aggregate stats from all providers
@@ -104,49 +130,60 @@ export default function DashboardPage() {
   if (!showDashboard) {
     return (
       <div 
-        className="min-h-screen w-screen overflow-x-hidden flex flex-col text-slate-100 selection:bg-cyan-500/30 select-none"
+        className="min-h-screen w-screen overflow-x-hidden flex flex-col text-slate-100 selection:bg-cyan-500/30 selection:text-white select-none font-sans"
         style={{ background: "radial-gradient(ellipse at top, hsl(230, 25%, 8%) 0%, hsl(230, 30%, 3%) 100%)" }}
       >
         {/* Navigation Header */}
-        <header className="flex items-center justify-between px-8 py-5 max-w-7xl mx-auto w-full border-b border-white/[0.04] backdrop-blur-md sticky top-0 z-50">
+        <header className="flex items-center justify-between px-6 md:px-12 py-5 max-w-7xl mx-auto w-full border-b border-white/[0.03] backdrop-blur-md sticky top-0 z-50">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/10">
+            <div className="w-8.5 h-8.5 rounded-xl bg-gradient-to-tr from-cyan-400 via-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/10">
               <Shield size={16} className="text-white" />
             </div>
-            <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">Ceil</span>
+            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">Ceil</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
+            {proxyOnline === true ? (
+              <span className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Proxy Connected
+              </span>
+            ) : (
+              <span className="hidden sm:flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                Local Client Offline
+              </span>
+            )}
             <button 
               onClick={() => setShowDashboard(true)}
-              className="text-xs font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
-              Demo Sandbox
+              Web Demo Sandbox
             </button>
             <a 
               href="https://github.com/talha-zakir/Ceil/raw/main/production_artifacts/ceil.exe" 
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-white/[0.06] border border-white/[0.08] hover:bg-white/[0.1] hover:border-white/[0.15] transition-all cursor-pointer shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.09] hover:border-white/[0.15] transition-all cursor-pointer shadow-sm hover:shadow-md"
             >
               <Download size={13} />
-              <span>Download</span>
+              <span>Download Client</span>
             </a>
           </div>
         </header>
 
         {/* Hero Section */}
-        <main className="flex-1 max-w-6xl mx-auto w-full px-6 flex flex-col items-center justify-center text-center py-20 lg:py-32 space-y-8 relative">
+        <main className="flex-1 max-w-6xl mx-auto w-full px-6 flex flex-col items-center justify-center text-center py-20 lg:py-28 space-y-8 relative">
           {/* Neon background blurs */}
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[250px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute top-1/3 left-1/3 w-[300px] h-[150px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
+          <div className="absolute top-1/3 left-1/3 w-[350px] h-[180px] bg-indigo-500/10 rounded-full blur-[110px] pointer-events-none" />
 
           {/* Tagline Badge */}
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium tracking-wide shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium tracking-wide shadow-sm"
           >
             <Sparkles size={12} className="animate-pulse" />
-            <span>Privacy-First LLM Monitoring</span>
+            <span>Zero-Leak API Cost Guard & Optimization</span>
           </motion.div>
 
           {/* Heading */}
@@ -154,9 +191,9 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-6xl font-extrabold tracking-tight max-w-3xl leading-[1.1] text-white"
+            className="text-4xl sm:text-6xl font-black tracking-tight max-w-3xl leading-[1.08] text-white"
           >
-            The Secure Local Firewall & <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-indigo-500 bg-clip-text text-transparent">Quota Optimizer</span> for LLMs
+            Stop Overpaying for LLMs. <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-indigo-500 bg-clip-text text-transparent">Lock Down Quotas Locally.</span>
           </motion.h1>
 
           {/* Description */}
@@ -164,33 +201,55 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-base sm:text-lg text-slate-400 max-w-2xl leading-relaxed"
+            className="text-sm sm:text-base text-slate-400 max-w-2xl leading-relaxed"
           >
-            Route API calls through a local micro-proxy daemon. Keep API keys safely stored inside your operating system's native Keychain. Monitor usage in real-time, block rogue loops, and failover automatically.
+            Ceil is an elite local proxy and native desktop shell designed for indie developers. 
+            Inject secrets dynamically from your OS Keychain, monitor rate-limit windows in real-time, 
+            and instantly block rogue api loops before they rack up thousands in costs.
           </motion.p>
 
-          {/* CTAs */}
+          {/* 2 Primary CTAs */}
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full pt-4"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full pt-4 max-w-lg mx-auto"
           >
+            {/* CTA 1: Web Dashboard Console */}
             <button
               onClick={() => setShowDashboard(true)}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-black bg-cyan-400 hover:bg-cyan-300 transition-colors shadow-lg shadow-cyan-400/20 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-sm font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all shadow-lg hover:shadow-cyan-400/25 shadow-cyan-400/10 cursor-pointer duration-200 border border-cyan-300/30 group"
             >
-              <span>Explore Demo Console</span>
-              <ArrowRight size={16} />
+              <Play size={14} className="fill-black group-hover:scale-110 transition-transform" />
+              <span>{proxyOnline === true ? "Enter Live Console" : "Launch Web Demo Sandbox"}</span>
             </button>
 
+            {/* CTA 2: Download Client */}
             <a
               href="https://github.com/talha-zakir/Ceil/raw/main/production_artifacts/ceil.exe"
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold text-slate-200 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all cursor-pointer shadow-md"
+              className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-sm font-bold text-slate-200 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.07] hover:border-white/[0.16] hover:text-white transition-all cursor-pointer shadow-md duration-200"
             >
-              <Download size={16} />
-              <span>Download Desktop Client</span>
+              <Download size={14} />
+              <span>Download Desktop App</span>
             </a>
+          </motion.div>
+
+          {/* Proxy status prompt mechanism directly in Landing Page */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35 }}
+            className="w-full max-w-lg mx-auto text-xs"
+          >
+            {proxyOnline === true ? (
+              <p className="text-emerald-400/80 bg-emerald-500/5 border border-emerald-500/10 py-2.5 px-4 rounded-xl">
+                ⚡ <strong>Ceil Local Client is active!</strong> Entering the sandbox will automatically hook into your local developer rate limits and proxy server.
+              </p>
+            ) : (
+              <p className="text-amber-400/80 bg-amber-500/5 border border-amber-500/10 py-2.5 px-4 rounded-xl leading-relaxed">
+                🔌 <strong>Local Proxy not detected.</strong> If you don't have it running, entering the sandbox will showcase Ceil's interface with realistic demo data.
+              </p>
+            )}
           </motion.div>
 
           {/* Proxy visual schema */}
@@ -201,50 +260,53 @@ export default function DashboardPage() {
             className="pt-16 w-full max-w-3xl"
           >
             <div className="rounded-xl border border-white/[0.05] bg-white/[0.01] p-5 backdrop-blur-md flex flex-col md:flex-row items-center justify-around gap-6 md:gap-4">
-              <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-white/[0.03] border border-white/[0.03] w-48 text-center shadow-inner">
-                <Cpu size={22} className="text-slate-400" />
-                <span className="text-xs font-semibold text-slate-200">Your SDK / App</span>
-                <span className="text-[10px] text-slate-500">Bearer sk-placeholder</span>
+              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-white/[0.03] border border-white/[0.03] w-48 text-center shadow-inner">
+                <Terminal size={20} className="text-slate-400" />
+                <span className="text-xs font-semibold text-slate-200">Developer Script</span>
+                <span className="text-[10px] text-slate-500">api_key="sk-placeholder"</span>
               </div>
               <div className="text-cyan-400 animate-pulse text-xs">➡️</div>
-              <div className="flex flex-col items-center gap-1.5 p-4 rounded-xl bg-cyan-950/20 border border-cyan-500/30 w-52 text-center shadow-[0_0_15px_rgba(34,211,238,0.05)]">
-                <Lock size={22} className="text-cyan-400" />
+              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-cyan-950/20 border border-cyan-500/30 w-52 text-center shadow-[0_0_15px_rgba(34,211,238,0.05)]">
+                <Lock size={20} className="text-cyan-400" />
                 <span className="text-xs font-bold text-cyan-300">Ceil Local Proxy</span>
-                <span className="text-[9px] text-cyan-400 font-mono">Injects real key from OS</span>
+                <span className="text-[9px] text-cyan-400 font-mono">Swaps placeholder on-the-fly</span>
               </div>
               <div className="text-indigo-400 animate-pulse text-xs">➡️</div>
-              <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-white/[0.03] border border-white/[0.03] w-48 text-center shadow-inner">
-                <Layers size={22} className="text-indigo-400" />
-                <span className="text-xs font-semibold text-slate-200">Upstream API</span>
-                <span className="text-[10px] text-slate-500">HTTPS (OpenAI, Gemini)</span>
+              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-white/[0.03] border border-white/[0.03] w-48 text-center shadow-inner">
+                <Layers size={20} className="text-indigo-400" />
+                <span className="text-xs font-semibold text-slate-200">Upstream LLM</span>
+                <span className="text-[10px] text-slate-500">HTTPS (OpenAI, Gemini...)</span>
               </div>
             </div>
           </motion.div>
 
           {/* Features Grid */}
           <section className="pt-24 grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left">
-            <div className="p-6 rounded-xl border border-white/[0.04] bg-white/[0.02]">
-              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-4">
+            {/* Feature 1 */}
+            <div className="p-6 rounded-xl border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.03] hover:border-white/[0.08] transition-all duration-200 group">
+              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                 <Lock size={18} className="text-cyan-400" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-100 mb-1">Zero-Leak Key Security</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">Your actual LLM provider keys are stored natively in Windows Credential Manager or macOS Keychain, completely bypassing the cloud.</p>
+              <h3 className="text-sm font-bold text-slate-100 mb-1">OS Keychain Key Injection</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">Keep secrets off files and Vercel. Keys store natively in macOS Keychain or Windows Credential Manager and inject on-the-fly locally.</p>
             </div>
 
-            <div className="p-6 rounded-xl border border-white/[0.04] bg-white/[0.02]">
-              <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-4">
+            {/* Feature 2 */}
+            <div className="p-6 rounded-xl border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.03] hover:border-white/[0.08] transition-all duration-200 group">
+              <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                 <Zap size={18} className="text-indigo-400" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-100 mb-1">Smart Auto-Failover</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">Automatically reroute calls to a backup provider when a key hits rate limits (429 status code), preventing project down-time.</p>
+              <h3 className="text-sm font-bold text-slate-100 mb-1">Smart Auto-Failover</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">Automatically fall back to alternative models or providers when primary keys return a rate-limit (429) block.</p>
             </div>
 
-            <div className="p-6 rounded-xl border border-white/[0.04] bg-white/[0.02]">
-              <div className="w-10 h-10 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-4">
+            {/* Feature 3 */}
+            <div className="p-6 rounded-xl border border-white/[0.04] bg-white/[0.02] hover:bg-white/[0.03] hover:border-white/[0.08] transition-all duration-200 group">
+              <div className="w-10 h-10 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
                 <TrendingUp size={18} className="text-teal-400" />
               </div>
-              <h3 className="text-sm font-semibold text-slate-100 mb-1">What-If Optimization</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">Calculate savings dynamically from session logs by analyzing accuracy and cost tradeoffs on lower model tiers.</p>
+              <h3 className="text-sm font-bold text-slate-100 mb-1">"What-If" Routing Trade-offs</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">Graph accuracy versus cost compromises. Optimize routing rules by comparing coding benchmarks (HumanEval) and pricing tiers.</p>
             </div>
           </section>
         </main>
@@ -279,6 +341,29 @@ export default function DashboardPage() {
             animate="visible"
             className="max-w-[1400px] mx-auto space-y-6"
           >
+            {/* Banner prompting user if local proxy is offline on dashboard */}
+            {proxyOnline === false && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 text-amber-400 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs shadow-md"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                  <span>
+                    <strong>Ceil Proxy Offline:</strong> Launch the desktop application to establish a secure loopback connection and monitor actual API calls. Running in <strong>Demo Mode</strong>.
+                  </span>
+                </div>
+                <a
+                  href="https://github.com/talha-zakir/Ceil/raw/main/production_artifacts/ceil.exe"
+                  className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-lg text-[10px] font-semibold text-amber-300 hover:bg-amber-500/20 hover:text-white transition-all cursor-pointer shadow-sm shrink-0"
+                >
+                  <Download size={12} />
+                  <span>Download Desktop App</span>
+                </a>
+              </motion.div>
+            )}
+
             {/* Velocity Alert Banner */}
             <VelocityAlert />
 
