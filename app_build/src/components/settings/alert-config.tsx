@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Bell, Volume2, VolumeX } from "lucide-react";
 import { PROVIDER_LIST } from "@/lib/constants";
+import { toast } from "sonner";
+import { showVelocityAlert } from "@/components/dashboard/velocity-alert";
 
 interface AlertSettings {
   velocityThreshold: number;
@@ -35,8 +37,166 @@ export function AlertConfig() {
     }));
   };
 
+  const triggerTestNotification = async (type: "budget" | "rogue" | "failover") => {
+    // Request permission if default
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        await Notification.requestPermission();
+      }
+    }
+
+    const isTauri = typeof window !== "undefined" && (window as any).__TAURI_INTERNALS__;
+    if (isTauri) {
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("simulate_safety_event", { eventType: type });
+      } catch (err) {
+        console.error("Failed to invoke Tauri simulation event:", err);
+      }
+    } else {
+      const showNative = (title: string, body: string) => {
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+          try {
+            new Notification(title, { body });
+          } catch (e) {
+            console.warn("Failed to trigger native notification:", e);
+          }
+        }
+      };
+
+      if (type === "budget") {
+        const title = "Spend Cap Exceeded!";
+        const message = "Daily budget limit of $10.00 reached for OpenAI. Proxy requests paused.";
+        showVelocityAlert({
+          type: "critical",
+          provider: "openai",
+          message: "Daily budget limit of $10.00 exceeded. Proxy requests paused."
+        });
+        showNative(title, message);
+      } else if (type === "rogue") {
+        const title = "Rogue Loop Blocked!";
+        const message = "High request velocity detected (720% spike on Anthropic Claude). Request blocked to prevent cost run-away.";
+        showVelocityAlert({
+          type: "critical",
+          provider: "anthropic",
+          message: "Velocity Spike! 720% increase in last 15m. Blocked to prevent rogue loops."
+        });
+        showNative(title, message);
+      } else if (type === "failover") {
+        const title = "Auto-Failover Triggered";
+        const message = 'Provider "gemini" rate-limited. Re-routing request to "anthropic" Claude seamlessly...';
+        showVelocityAlert({
+          type: "warning",
+          provider: "gemini",
+          message: "Rate limit reached (429). Failover to fallback (anthropic) succeeded."
+        });
+        showNative(title, message);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Alert Simulation Panel */}
+      <div
+        className="rounded-xl p-5 space-y-4"
+        style={{
+          background: "hsl(var(--bg-secondary))",
+          border: "1px solid hsl(var(--border-strong))",
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <Bell size={16} />
+          </div>
+          <div>
+            <h3
+              className="text-sm font-semibold"
+              style={{ color: "hsl(var(--text-primary))" }}
+            >
+              Alert Simulation Sandbox
+            </h3>
+            <p
+              className="text-xs"
+              style={{ color: "hsl(var(--text-tertiary))" }}
+            >
+              Test desktop push notifications and real-time dashboard safety alerts.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Spend Cap Exceeded */}
+          <button
+            onClick={() => triggerTestNotification("budget")}
+            className="flex flex-col items-start text-left p-3.5 rounded-lg border transition-all hover:bg-white/[0.04] cursor-pointer group"
+            style={{
+              borderColor: "hsl(var(--border-subtle))",
+              background: "hsl(var(--bg-root))",
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-xs font-semibold text-rose-400 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                Budget Exceeded
+              </span>
+            </div>
+            <p className="text-[11px] text-[hsl(var(--text-secondary))] leading-normal mb-3">
+              Simulate reaching the daily/monthly budget spend cap limit.
+            </p>
+            <span className="mt-auto text-[10px] text-indigo-400 group-hover:underline flex items-center gap-1">
+              Trigger Alert &rarr;
+            </span>
+          </button>
+
+          {/* Rogue Loop Blocked */}
+          <button
+            onClick={() => triggerTestNotification("rogue")}
+            className="flex flex-col items-start text-left p-3.5 rounded-lg border transition-all hover:bg-white/[0.04] cursor-pointer group"
+            style={{
+              borderColor: "hsl(var(--border-subtle))",
+              background: "hsl(var(--bg-root))",
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                Rogue Loop / Spike
+              </span>
+            </div>
+            <p className="text-[11px] text-[hsl(var(--text-secondary))] leading-normal mb-3">
+              Simulate blocking an abnormal high-velocity API request spike.
+            </p>
+            <span className="mt-auto text-[10px] text-indigo-400 group-hover:underline flex items-center gap-1">
+              Trigger Alert &rarr;
+            </span>
+          </button>
+
+          {/* Auto-Failover */}
+          <button
+            onClick={() => triggerTestNotification("failover")}
+            className="flex flex-col items-start text-left p-3.5 rounded-lg border transition-all hover:bg-white/[0.04] cursor-pointer group"
+            style={{
+              borderColor: "hsl(var(--border-subtle))",
+              background: "hsl(var(--bg-root))",
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-xs font-semibold text-sky-400 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                Auto-Failover
+              </span>
+            </div>
+            <p className="text-[11px] text-[hsl(var(--text-secondary))] leading-normal mb-3">
+              Simulate seamlessly re-routing requests when Gemini rate-limits.
+            </p>
+            <span className="mt-auto text-[10px] text-indigo-400 group-hover:underline flex items-center gap-1">
+              Trigger Alert &rarr;
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* Global Toggle */}
       <div
         className="flex items-center justify-between p-4 rounded-xl"

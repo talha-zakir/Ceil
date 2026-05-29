@@ -43,6 +43,26 @@ pub fn update_proxy_config(
     Ok(())
 }
 
+#[tauri::command]
+pub fn simulate_safety_event(app_handle: AppHandle, event_type: String) {
+    if event_type == "budget" {
+        let _ = app_handle.emit("cap-triggered", serde_json::json!({
+            "type": "budget",
+            "message": "Daily budget limit of $10.00 reached on OpenAI. Proxy requests paused to prevent overspend."
+        }));
+    } else if event_type == "rogue" {
+        let _ = app_handle.emit("cap-triggered", serde_json::json!({
+            "type": "rogue",
+            "message": "Abnormal request velocity detected: 720% spike on Anthropic Claude. Proxy has paused requests."
+        }));
+    } else if event_type == "failover" {
+        let _ = app_handle.emit("failover-occurred", serde_json::json!({
+            "original": "gemini",
+            "fallback": "anthropic"
+        }));
+    }
+}
+
 #[derive(Serialize, Clone)]
 pub struct RateLimitInfo {
     pub provider: String,

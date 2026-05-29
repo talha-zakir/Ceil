@@ -31,13 +31,16 @@ function isValidClerkKey(key: string): boolean {
 export function ClerkProviderWrapper({ children }: { children: React.ReactNode }) {
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
 
+  // Bypass Clerk initialization during server-side static pre-rendering
+  if (typeof window === "undefined") {
+    return <>{children}</>;
+  }
+
   if (!isValidClerkKey(publishableKey)) {
-    if (typeof window !== "undefined") {
-      console.warn(
-        "Clerk: Publishable key is invalid or a placeholder. " +
-        "Auth features are disabled. Set a valid NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in .env.local."
-      );
-    }
+    console.warn(
+      "Clerk: Publishable key is invalid or a placeholder. " +
+      "Auth features are disabled. Set a valid NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in .env.local."
+    );
     return <>{children}</>;
   }
 

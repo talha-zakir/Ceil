@@ -8,7 +8,7 @@ use tauri::menu::{Menu, MenuItem};
 use std::sync::Mutex;
 use std::collections::HashMap;
 
-pub use proxy::{AppState, ProxyConfig, update_proxy_config};
+pub use proxy::{AppState, ProxyConfig, update_proxy_config, simulate_safety_event};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -74,8 +74,12 @@ pub fn run() {
             keychain::get_api_key,
             keychain::delete_api_key,
             keychain::test_api_key,
-            update_proxy_config
+            update_proxy_config,
+            simulate_safety_event
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+
+
