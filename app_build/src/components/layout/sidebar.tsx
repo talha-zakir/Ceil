@@ -40,6 +40,11 @@ const statusColors: Record<string, string> = {
 export function Sidebar({ providers, collapsed, onToggle }: SidebarProps) {
   const [activeProvider, setActiveProvider] = useState<string | null>(null);
 
+  // Deduplicate by provider ID to ensure we only render one button per unique provider in the sidebar
+  const uniqueProviders = providers.filter(
+    (p, index, self) => self.findIndex((t) => t.provider === p.provider) === index
+  );
+
   return (
     <motion.aside
       className="relative flex flex-col h-full shrink-0 z-10"
@@ -93,7 +98,7 @@ export function Sidebar({ providers, collapsed, onToggle }: SidebarProps) {
 
       {/* Provider List */}
       <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-1">
-        {providers.map((provider) => {
+        {uniqueProviders.map((provider) => {
           const meta = PROVIDERS[provider.provider];
           const Icon = providerIcons[provider.provider] || Sparkles;
           const isActive = activeProvider === provider.provider;
