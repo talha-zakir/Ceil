@@ -31,9 +31,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 ---
 
 ## 🔄 Current Pipeline State
-- **Active Step**: `Testing & Verification` (Developer Alerts Sandbox Simulator integrated and pushed to GitHub)
-- **Last Updated**: 2026-05-30T02:50:00+09:00
-- **Current Objective**: Enable user to manually trigger and test safety alerts (Daily Budget Spend Cap, Rogue Loop spike detector, and Auto-Failover events) via developer simulator dashboard controls.
+- **Active Step**: `Testing & Verification` (Collapsible CLI Integration Guide and Sandbox Simulator fully integrated)
+- **Last Updated**: 2026-05-30T03:05:00+09:00
+- **Current Objective**: Enable user to manually trigger and test safety alerts, and view detailed instructions on routing CLI / SDK API traffic through the local proxy.
 
 ---
 
@@ -73,6 +73,7 @@ This file serves as the persistent memory for the Antigravity development team. 
 - `app_build/LOCAL_SETUP.md` & `app_build/README.md`: Environment setup guides and documentation.
 - `app_build/.env.example`: Local environment template.
 - `app_build/src/app/page.tsx`: Landing page, connection checking, and main dashboard view.
+- `app_build/src/components/settings/api-key-form.tsx`: Credentials input forms, active proxy connection indicators, and collapsible terminal integration instructions.
 - `app_build/src/components/layout/auth-listener.tsx`: Global event toaster with added auto-update check and blocking popup modal.
 - `app_build/src-tauri/src/main.rs`, `keychain.rs`, `proxy.rs`, `deeplink.rs`: Tauri backend Rust proxy layer.
 - `app_build/src/components/settings/routing-config.tsx`: Safety, failover, and caps config card.
@@ -139,3 +140,10 @@ If any of the newly added cost safety, failover, or routing intelligence feature
   - Remove `simulate_safety_event` Rust command definition from `proxy.rs`.
 - **Tauri Register Handler (`app_build/src-tauri/src/lib.rs`)**:
   - Remove `simulate_safety_event` from the `tauri::generate_handler![...]` array in `lib.rs`.
+
+### 5. Reverting Terminal & CLI Integration Guide
+- **Next.js UI (`app_build/src/components/settings/api-key-form.tsx`)**:
+  - Remove `showGuide`, `guideTab`, `copiedText`, and `copyToClipboard` variables/hooks.
+  - Delete imports of `Terminal`, `ChevronDown`, `ChevronUp`, and `Copy` from `lucide-react`.
+  - Delete the `CLI & Terminal Integration Guide` JSX card block.
+
