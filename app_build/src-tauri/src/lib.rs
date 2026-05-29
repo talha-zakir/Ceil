@@ -17,7 +17,13 @@ pub fn run() {
             config: Mutex::new(ProxyConfig {
                 failover_enabled: false,
                 fallback_rules: HashMap::new(),
+                daily_spend_limit: 0.0,
+                rogue_loop_protection: false,
+                max_requests_per_minute: 60,
             }),
+            request_timestamps: Mutex::new(Vec::new()),
+            daily_spend: Mutex::new(0.0),
+            last_spend_reset: Mutex::new(std::time::SystemTime::now()),
         })
         .plugin(tauri_plugin_log::Builder::default().build())
         .plugin(tauri_plugin_deep_link::init())

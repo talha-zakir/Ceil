@@ -17,10 +17,19 @@ pub struct ProxyConfig {
     pub failover_enabled: bool,
     #[serde(rename = "fallbackRules")]
     pub fallback_rules: HashMap<String, String>,
+    #[serde(rename = "dailySpendLimit")]
+    pub daily_spend_limit: f64,
+    #[serde(rename = "rogueLoopProtection")]
+    pub rogue_loop_protection: bool,
+    #[serde(rename = "maxRequestsPerMinute")]
+    pub max_requests_per_minute: u32,
 }
 
 pub struct AppState {
     pub config: Mutex<ProxyConfig>,
+    pub request_timestamps: Mutex<Vec<std::time::Instant>>,
+    pub daily_spend: Mutex<f64>,
+    pub last_spend_reset: Mutex<std::time::SystemTime>,
 }
 
 #[tauri::command]
@@ -114,6 +123,73 @@ async fn handle_request(
         }
     }
     
+    // 1. Load config and verify budget caps and request velocity limits
+    let mut config_failover_enabled = false;
+    let mut fallback_rules = HashMap::new();
+    let mut daily_spend_limit = 0.0;
+    let mut rogue_loop_protection = false;
+    let mut max_requests_per_minute = 60;
+
+    if let Some(state) = app_handle.try_state::<AppState>() {
+        // Reset daily spend after 24 hours
+        if let Ok(mut last_reset) = state.last_spend_reset.lock() {
+            if let Ok(elapsed) = last_reset.elapsed() {
+                if elapsed.as_secs() >= 86400 {
+                    if let Ok(mut spend) = state.daily_spend.lock() {
+                        *spend = 0.0;
+                        *last_reset = std::time::SystemTime::now();
+                        info!("Daily spend tracker reset.");
+                    }
+                }
+            }
+        }
+
+        if let Ok(cfg) = state.config.lock() {
+            config_failover_enabled = cfg.failover_enabled;
+            fallback_rules = cfg.fallback_rules.clone();
+            daily_spend_limit = cfg.daily_spend_limit;
+            rogue_loop_protection = cfg.rogue_loop_protection;
+            max_requests_per_minute = cfg.max_requests_per_minute;
+        }
+
+        // Verify Daily Spend Cap
+        if daily_spend_limit > 0.0 {
+            if let Ok(spend) = state.daily_spend.lock() {
+                if *spend >= daily_spend_limit {
+                    error!("Request blocked: Daily budget cap exceeded (${:.2} / ${:.2})", *spend, daily_spend_limit);
+                    let _ = app_handle.emit("cap-triggered", serde_json::json!({
+                        "type": "budget",
+                        "message": format!("Daily spend limit of ${:.2} exceeded. API calls blocked.", daily_spend_limit)
+                    }));
+                    return Ok(Response::builder()
+                        .status(429)
+                        .body(Full::new(Bytes::from("Ceil Daily Budget Cap Exceeded: Request blocked to prevent runaway costs.")))
+                        .unwrap());
+                }
+            }
+        }
+
+        // Verify Rogue Loop Request Velocity
+        if rogue_loop_protection {
+            if let Ok(mut timestamps) = state.request_timestamps.lock() {
+                let now = std::time::Instant::now();
+                timestamps.retain(|t| now.duration_since(*t).as_secs() < 60);
+                if timestamps.len() >= max_requests_per_minute as usize {
+                    error!("Request blocked: Rogue loop detected (exceeded {} req/min)", max_requests_per_minute);
+                    let _ = app_handle.emit("cap-triggered", serde_json::json!({
+                        "type": "rogue-loop",
+                        "message": format!("Rogue loop detected (exceeded {} req/min). API calls locked.", max_requests_per_minute)
+                    }));
+                    return Ok(Response::builder()
+                        .status(429)
+                        .body(Full::new(Bytes::from("Ceil Rogue Loop Block: Request blocked due to high request velocity.")))
+                        .unwrap());
+                }
+                timestamps.push(now);
+            }
+        }
+    }
+
     info!("Proxying request to {}", target_url);
 
     let mut req_builder = client.request(
@@ -135,16 +211,6 @@ async fn handle_request(
     req_builder = req_builder.body(body_bytes.clone());
     
     let res = req_builder.send().await;
-
-    // Load proxy configuration state
-    let mut config_failover_enabled = false;
-    let mut fallback_rules = std::collections::HashMap::new();
-    if let Some(state) = app_handle.try_state::<crate::AppState>() {
-        if let Ok(cfg) = state.config.lock() {
-            config_failover_enabled = cfg.failover_enabled;
-            fallback_rules = cfg.fallback_rules.clone();
-        }
-    }
 
     match res {
         Ok(response) => {
@@ -187,15 +253,34 @@ async fn handle_request(
                                 "fallback": fallback_provider
                             }));
                             
-                            extract_and_emit_rate_limits(&fallback_res, &app_handle, &rewritten_url);
-                            return build_hyper_response(fallback_res).await;
+                            let res_bytes = fallback_res.bytes().await.unwrap_or_default();
+                            parse_usage_and_add_spend(&res_bytes, &rewritten_url, &app_handle);
+                            
+                            // Build a builder to rebuild response headers
+                            let hyper_resp = Response::builder().status(200);
+                            // Set headers and body
+                            return Ok(hyper_resp.body(Full::new(res_bytes)).unwrap());
                         }
                     }
                 }
             }
 
-            extract_and_emit_rate_limits(&response, &app_handle, &target_url);
-            build_hyper_response(response).await
+            let status_code = response.status().as_u16();
+            let headers = response.headers().clone();
+            let res_bytes = response.bytes().await.unwrap_or_default();
+            parse_usage_and_add_spend(&res_bytes, &target_url, &app_handle);
+
+            let mut hyper_resp = Response::builder().status(status_code);
+            if let Some(headers_mut) = hyper_resp.headers_mut() {
+                for (key, value) in &headers {
+                    if let Ok(name) = hyper::header::HeaderName::from_bytes(key.as_str().as_bytes()) {
+                        if let Ok(val) = hyper::header::HeaderValue::from_bytes(value.as_bytes()) {
+                            headers_mut.insert(name, val);
+                        }
+                    }
+                }
+            }
+            Ok(hyper_resp.body(Full::new(res_bytes)).unwrap())
         }
         Err(e) => {
             error!("Proxy request failed: {}", e);
@@ -303,3 +388,52 @@ fn extract_and_emit_rate_limits(res: &reqwest::Response, app: &AppHandle, url: &
         }
     }
 }
+
+fn estimate_request_cost(provider: &str, _model: &str, input_tokens: u64, output_tokens: u64) -> f64 {
+    let (in_rate, out_rate) = match provider.to_lowercase().as_str() {
+        "openai" => (0.0025 / 1000.0, 0.0100 / 1000.0),
+        "anthropic" => (0.0030 / 1000.0, 0.0150 / 1000.0),
+        "gemini" => (0.0070 / 1000.0, 0.0210 / 1000.0),
+        "groq" => (0.0001 / 1000.0, 0.0002 / 1000.0),
+        "mistral" => (0.0015 / 1000.0, 0.0045 / 1000.0),
+        _ => (0.0020 / 1000.0, 0.0080 / 1000.0),
+    };
+    (input_tokens as f64 * in_rate) + (output_tokens as f64 * out_rate)
+}
+
+fn parse_usage_and_add_spend(body: &[u8], url: &str, app: &AppHandle) {
+    if let Ok(json) = serde_json::from_slice::<serde_json::Value>(body) {
+        let provider = get_provider_from_url(url);
+        let model = json.get("model").and_then(|m| m.as_str()).unwrap_or("unknown");
+        
+        let mut input_tokens = 0;
+        let mut output_tokens = 0;
+        
+        if let Some(usage) = json.get("usage") {
+            input_tokens = usage.get("prompt_tokens")
+                .or_else(|| usage.get("input_tokens"))
+                .and_then(|t| t.as_u64())
+                .unwrap_or(0);
+            output_tokens = usage.get("completion_tokens")
+                .or_else(|| usage.get("output_tokens"))
+                .and_then(|t| t.as_u64())
+                .unwrap_or(0);
+        }
+        
+        if input_tokens > 0 || output_tokens > 0 {
+            let cost = estimate_request_cost(&provider, model, input_tokens, output_tokens);
+            if let Some(state) = app.try_state::<AppState>() {
+                if let Ok(mut spend) = state.daily_spend.lock() {
+                    *spend += cost;
+                    info!("Estimated cost for request: ${:.5}. Cumulative daily spend: ${:.5}", cost, *spend);
+                    
+                    // Emit updated daily spend to frontend so it can display cost updates in real-time
+                    let _ = app.emit("spend-updated", serde_json::json!({
+                        "dailySpend": *spend
+                    }));
+                }
+            }
+        }
+    }
+}
+

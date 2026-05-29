@@ -27,9 +27,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 ---
 
 ## 🔄 Current Pipeline State
-- **Active Step**: `@devops` (Desktop Binary Compiled Successfully)
-- **Last Updated**: 2026-05-29T11:41:00+09:00
-- **Current Objective**: Test the compiled standalone desktop application binary (`app.exe`)
+- **Active Step**: `@engineer` (Phase 12–14 Safety & Routing Features Complete)
+- **Last Updated**: 2026-05-29T14:20:00+09:00
+- **Current Objective**: Local dev testing with valid Clerk auth key. All 14 phases implemented and compiling cleanly.
 
 ---
 
@@ -51,6 +51,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 - [x] **4. Compilation & UI Verification** (Owner: `@engineer`) — Typescript build passes.
 - [x] **5. Local Hosting & Testing** (Owner: `@devops`) — Local Next.js build passes.
 - [x] **6. Desktop Build & Distribution** (Owner: `@devops`) — Tauri standalone `app.exe` compiled successfully.
+- [x] **7. Phase 12: Smart Auto-Failover** (Owner: `@engineer`) — Opt-in failover proxy, fallback chain mapping, Tauri IPC config sync.
+- [x] **8. Phase 13: Rogue Loop Detection & Budget Caps** (Owner: `@engineer`) — Sliding-window velocity limiter, daily spend cap, `cap-triggered` events.
+- [x] **9. Phase 14: "What-If" Routing Intelligence UI** (Owner: `@engineer`) — Cost optimizer widget with HumanEval accuracy tradeoff display.
 
 ---
 
@@ -64,9 +67,46 @@ This file serves as the persistent memory for the Antigravity development team. 
 - `app_build/src/components/providers/clerk-provider-wrapper.tsx`: CSR Clerk Provider wrapper.
 - `app_build/src/lib/supabase/client.ts`, `app_build/src/hooks/use-pricing.ts`: Supabase pricing client and hook.
 - `app_build/src/components/settings/billing-panel.tsx`: Stripe billing panel view.
+- `app_build/src/components/settings/routing-config.tsx`: Failover toggle, budget caps, rogue loop protection UI.
+- `app_build/src/components/dashboard/cost-optimizer.tsx`: "What-If" Routing Intelligence cost-accuracy widget.
+- `app_build/src/components/providers/clerk-provider-wrapper.tsx`: Graceful Clerk bypass when key is invalid/placeholder.
 
 ---
 
 ## ⚠️ Known Issues / Next Actions
-1. **NEXT**: The user can run the compiled binary `app.exe` directly from the release directory to launch the native desktop client.
-2. **NOTE**: The WiX installer packaging (`.msi`) was skipped due to a known command argument limitation with the ampersand character (`&`) in the folder name path. The standalone executable is fully self-contained and ready to run.
+1. **RESOLVED**: Clerk `ClerkRuntimeError` crash — fixed by decoding base64 publishable key payload and bypassing `ClerkProvider` when key is invalid.
+2. **RESOLVED**: Duplicate React key warning (`mistral`) — fixed by using `provider-model` composite key.
+3. **RESOLVED**: User updated Clerk publishable key to a valid domain (`fun-tortoise-19.clerk.accounts.dev`).
+4. **NOTE**: The WiX installer packaging (`.msi`) was skipped due to a known command argument limitation with the ampersand character (`&`) in the folder name path. The standalone executable is fully self-contained and ready to run.
+5. **NOTE**: The `CLERK_SECRET_KEY` in `.env.local` is a server-side secret and should NOT be committed to Git. Verify `.gitignore` includes `.env.local`.
+6. **NEXT**: Rebuild Tauri desktop binary with updated Clerk key: `node node_modules/@tauri-apps/cli/tauri.js build --no-bundle`
+
+---
+
+## 🔄 Rollback & Removal Plan (Backup Guide)
+
+If any of the newly added cost safety, failover, or routing intelligence features do not provide enough value or need to be reverted, follow these recovery/removal steps:
+
+### 1. Reverting Smart Auto-Failover
+- **Rust Proxy (`app_build/src-tauri/src/proxy.rs`)**:
+  - Remove the auto-failover status checker at lines 218–267 (the block checking `response.status() == reqwest::StatusCode::TOO_MANY_REQUESTS && config_failover_enabled`).
+  - Revert the `ProxyConfig` struct fields `failover_enabled` and `fallback_rules`.
+- **Tauri State (`app_build/src-tauri/src/lib.rs`)**:
+  - Revert the default configuration inside `.manage(...)` by removing `failover_enabled` and `fallback_rules`.
+- **Next.js UI (`app_build/src/components/settings/routing-config.tsx`)**:
+  - Delete the "Smart Auto-Failover" toggle card and fallback options dropdowns.
+
+### 2. Reverting Rogue Loop Protection & Spend Caps
+- **Rust Proxy (`app_build/src-tauri/src/proxy.rs`)**:
+  - Remove the checks at lines 156–191 (verifying daily budget spend limit and sliding-window velocity stamps).
+  - Delete `parse_usage_and_add_spend` and `estimate_request_cost` logic or empty their bodies.
+- **Tauri State (`app_build/src-tauri/src/lib.rs`)**:
+  - Remove the initialized AppState fields (`request_timestamps`, `daily_spend`, `last_spend_reset`).
+- **Next.js UI (`app_build/src/components/settings/routing-config.tsx`)**:
+  - Remove the "Runaway Cost Protection" input fields and settings toggle controls.
+
+### 3. Reverting "What-If" Routing Intelligence UI
+- **Dashboard Layout (`app_build/src/app/page.tsx`)**:
+  - Delete the `<CostOptimizer quotas={quotas} />` element block and its import statement: `import { CostOptimizer } from "@/components/dashboard/cost-optimizer";`.
+- **UI File**:
+  - Delete `app_build/src/components/dashboard/cost-optimizer.tsx` completely.

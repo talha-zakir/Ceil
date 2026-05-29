@@ -14,5 +14,8 @@ This log registers every major milestone, transition, and action completed by th
 | 2026-05-29T10:45 | @engineer | Billing & Cloud Integration | Integrated client-side Clerk React SDK, dynamic Supabase pricing hook, and Stripe billing panel UI. |
 | 2026-05-29T11:08 | System | Memory Sync | Memory synchronized manually via `/sync` command. |
 | 2026-05-29T11:41 | @devops | Tauri Standalone Compiled | Resolved compilation issues and successfully compiled the standalone native Windows desktop application executable `app.exe` (12.3MB). |
-
+| 2026-05-29T12:25 | @engineer | Safety & Routing Specs Integrated | Implemented Smart Auto-Failover, Rogue Loop Protection, Daily Spend Caps, and What-If UI routing intelligence. Documented rollback guides in handover.md. |
+| 2026-05-29T12:30 | @engineer | Clerk Runtime Fix | Fixed `ClerkRuntimeError` crash by decoding base64 key payload and bypassing ClerkProvider when key is invalid. Fixed duplicate React key warning for `mistral` provider (multiple models share same provider id). |
+| 2026-05-29T14:19 | User | Clerk Key Updated | User replaced placeholder Clerk publishable key with valid key (`fun-tortoise-19.clerk.accounts.dev`). Added `CLERK_SECRET_KEY`. |
+| 2026-05-29T14:20 | System | Memory Sync | Memory synchronized via `/sync` command. All 14 phases documented. Rollback guide preserved. |
 

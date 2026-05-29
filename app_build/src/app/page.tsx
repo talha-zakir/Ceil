@@ -19,6 +19,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { CostChart } from "@/components/dashboard/cost-chart";
 import { BudgetTracker } from "@/components/dashboard/budget-tracker";
 import { VelocityAlert } from "@/components/dashboard/velocity-alert";
+import { CostOptimizer } from "@/components/dashboard/cost-optimizer";
 import { useQuota } from "@/hooks/use-quota";
 import { useCostHistory } from "@/hooks/use-cost-history";
 
@@ -159,6 +160,11 @@ export default function DashboardPage() {
               </div>
             </motion.div>
 
+            {/* "What-If" Routing Intelligence Widget */}
+            <motion.div variants={itemVariants}>
+              <CostOptimizer quotas={quotas} />
+            </motion.div>
+
             {/* Provider Cards Grid */}
             <motion.div variants={itemVariants}>
               <div className="flex items-center justify-between mb-4">
@@ -174,7 +180,7 @@ export default function DashboardPage() {
               </div>
               <ProviderGrid>
                 {quotas.map((quota) => (
-                  <ProviderCard key={quota.provider} data={quota} />
+                  <ProviderCard key={`${quota.provider}-${quota.model}`} data={quota} />
                 ))}
               </ProviderGrid>
             </motion.div>
