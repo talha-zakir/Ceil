@@ -31,9 +31,9 @@ This file serves as the persistent memory for the Antigravity development team. 
 ---
 
 ## 🔄 Current Pipeline State
-- **Active Step**: `Testing & Verification` (Collapsible CLI Integration Guide and Sandbox Simulator fully integrated)
-- **Last Updated**: 2026-05-30T03:05:00+09:00
-- **Current Objective**: Enable user to manually trigger and test safety alerts, and view detailed instructions on routing CLI / SDK API traffic through the local proxy.
+- **Active Step**: `Testing & Verification` (Dynamic connection indicator in header and sandbox simulator fully integrated)
+- **Last Updated**: 2026-05-30T03:10:00+09:00
+- **Current Objective**: Enable user to manually trigger and test safety alerts, view terminal connection instructions, and monitor live proxy status via a healthy green badge in the dashboard header.
 
 ---
 
@@ -73,6 +73,7 @@ This file serves as the persistent memory for the Antigravity development team. 
 - `app_build/LOCAL_SETUP.md` & `app_build/README.md`: Environment setup guides and documentation.
 - `app_build/.env.example`: Local environment template.
 - `app_build/src/app/page.tsx`: Landing page, connection checking, and main dashboard view.
+- `app_build/src/components/layout/header.tsx`: Global dashboard navigation header containing dynamic proxy connectivity badge indicator.
 - `app_build/src/components/settings/api-key-form.tsx`: Credentials input forms, active proxy connection indicators, and collapsible terminal integration instructions.
 - `app_build/src/components/layout/auth-listener.tsx`: Global event toaster with added auto-update check and blocking popup modal.
 - `app_build/src-tauri/src/main.rs`, `keychain.rs`, `proxy.rs`, `deeplink.rs`: Tauri backend Rust proxy layer.
@@ -146,4 +147,10 @@ If any of the newly added cost safety, failover, or routing intelligence feature
   - Remove `showGuide`, `guideTab`, `copiedText`, and `copyToClipboard` variables/hooks.
   - Delete imports of `Terminal`, `ChevronDown`, `ChevronUp`, and `Copy` from `lucide-react`.
   - Delete the `CLI & Terminal Integration Guide` JSX card block.
+
+### 6. Reverting Dynamic Connection Badge in Header
+- **Next.js UI (`app_build/src/components/layout/header.tsx`)**:
+  - Remove `proxyOnline` state variable and its associated `useEffect` polling status hook.
+  - Revert the `Connection Status` JSX element back to the static grey implementation.
+
 
